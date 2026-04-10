@@ -59,7 +59,7 @@
 <body>
 
 <div class="container">
-    <div class="version-badge">v1.9.1</div>
+    <div class="version-badge">v1.9.2</div>
     <h2><i class="fa-solid fa-layer-group" style="color:var(--primary); margin-right:10px;"></i>Portal RNF <span>| Operacional</span></h2>
 
     <div class="search-section">
@@ -166,6 +166,7 @@
             const data = await res.json();
             listaAtual = data.abastecimentos || [];
             
+            // DASHBOARD COM FORMATAÇÃO R$
             document.getElementById('dashGeral').style.display = 'grid';
             document.getElementById('totalTrans').innerText = f(data.totalTransacionado);
             document.getElementById('totalRec').innerText = f(data.totalRecolhido);
@@ -221,7 +222,6 @@
         btn.classList.add('selected');
     }
 
-    // SALVAR COM O MODELO DE TEXTO ESPECÍFICO
     async function salvarAcaoModal() {
         if(!statusSelecionado) return alert("Selecione um status!");
         const btn = document.getElementById('btnSalvarModal');
@@ -233,14 +233,15 @@
         const analista = document.getElementById('analistaShow').value;
         const postoMatriz = document.getElementById('razaoShow').value;
 
+        // Mandamos o valor sem o "R$" para o script, mas com vírgula e ponto para ser processado
         const payload = {
             cnpjPosto: document.getElementById('buscaCnpj').value,
             cnpjUnidade: unidadeAtual.cnpjUnidade,
             posto: postoMatriz,
             unidade: unidadeAtual.nome,
-            total: f(vTotal),
-            rec: f(vRec),
-            pendente: f(vPen),
+            total: nF(vTotal),
+            rec: nF(vRec),
+            pendente: nF(vPen),
             status: statusSelecionado,
             analista: analista,
             obs: document.getElementById('modalObs').value
@@ -250,22 +251,18 @@
             await fetch(CONFIG.URL_SCRIPT, { method: 'POST', mode: 'no-cors', body: JSON.stringify(payload) });
             
             if (statusSelecionado === "Pendente") {
-                // MODELO DE TEXTO SOLICITADO
                 const msg = `Olá, sou ${analista}, somos da equipe RNF.\n` +
                             `Identificamos uma pendência para o posto: ${postoMatriz}.\n` +
-                            `Necessitamos recolher um valor Pendente de R$ ${f(vPen)}, para a empresa ${unidadeAtual.nome} e CNPJ ${unidadeAtual.cnpjUnidade}.\n` +
+                            `Necessitamos recolher um valor Pendente de ${f(vPen)}, para a empresa ${unidadeAtual.nome} e CNPJ ${unidadeAtual.cnpjUnidade}.\n` +
                             `Por favor, nos envie as notas faltantes.\n` +
                             `Obrigado.`;
                 
-                if (confirm("Ação gravada! Deseja copiar a mensagem de cobrança formatada?")) {
-                    navigator.clipboard.writeText(msg).then(() => {
-                        alert("Texto copiado com sucesso!");
-                    });
+                if (confirm("Ação gravada! Deseja copiar a mensagem de cobrança?")) {
+                    navigator.clipboard.writeText(msg).then(() => alert("Texto copiado!"));
                 }
             } else {
                 alert("Ação gravada com sucesso!");
             }
-            
             fecharModal();
         } catch (e) { alert("Ação enviada."); fecharModal(); }
         finally { btn.disabled = false; btn.innerText = "GRAVAR AÇÃO"; }
@@ -277,30 +274,33 @@
 
         const btn = event.currentTarget;
         const originalTxt = btn.innerHTML;
-        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> ACESSANDO HISTÓRICO...';
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> ACESSANDO...';
         
         try {
             const response = await fetch(`${CONFIG.URL_SCRIPT}?action=getExportData`);
             const dadosTotal = await response.json();
+            const filtrados = dadosTotal.filter(item => String(item["CNPJ Posto"] || item.cnpjPosto || "").replace(/\D/g, "") === cnpjBusca);
 
-            const filtrados = dadosTotal.filter(item => {
-                const cnpjPlanilha = String(item["CNPJ Posto"] || item.cnpjPosto || "").replace(/\D/g, "");
-                return cnpjPlanilha === cnpjBusca;
-            });
-
-            if (filtrados.length === 0) {
-                alert("Sem histórico na aba Historico_Acoes.");
-            } else {
+            if (filtrados.length === 0) { alert("Sem histórico."); }
+            else {
                 const ws = XLSX.utils.json_to_sheet(filtrados);
                 const wb = XLSX.utils.book_new();
                 XLSX.utils.book_append_sheet(wb, ws, "Historico");
-                XLSX.writeFile(wb, `RNF_Hist_${document.getElementById('razaoShow').value || 'Relatorio'}.xlsx`);
+                XLSX.writeFile(wb, `RNF_Hist_${document.getElementById('razaoShow').value}.xlsx`);
             }
         } catch (e) { alert("Erro ao exportar."); }
         finally { btn.innerHTML = originalTxt; }
     }
 
-    function f(v) { return (v || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+    // FORMATAÇÃO VISUAL (EXIBE COM R$)
+    function f(v) { 
+        return (v || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }); 
+    }
+
+    // FORMATAÇÃO PARA ENVIO (APENAS NÚMERO COM VÍRGULA E PONTO DE MILHAR)
+    function nF(v) {
+        return (v || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
 </script>
 </body>
 </html>
