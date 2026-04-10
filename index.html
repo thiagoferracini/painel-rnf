@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Portal RNF v1.3.2 - Ailog Tecnologia</title>
+    <title>Portal RNF v1.3.4 - Ailog Tecnologia</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         :root { --primary: #5cb8a1; --apple-blue: #0071e3; --bg: #f5f5f7; --alert: #d9534f; --text: #1d1d1f; }
@@ -17,10 +17,11 @@
         .card span { display: block; font-size: 10px; color: #86868b; text-transform: uppercase; font-weight: bold; margin-bottom: 5px; }
         .card b { font-size: 16px; color: var(--text); }
 
-        .search-section { background: #eef2f7; padding: 20px; border-radius: 10px; margin-bottom: 20px; display: grid; grid-template-columns: 1.5fr 2fr 1fr; gap: 15px; align-items: flex-end; }
+        .search-section { background: #eef2f7; padding: 20px; border-radius: 10px; margin-bottom: 20px; display: grid; grid-template-columns: 1fr 1.5fr 1fr 1fr; gap: 15px; align-items: flex-end; }
         .input-group { display: flex; flex-direction: column; }
         .input-group label { font-size: 11px; font-weight: bold; color: #666; margin-bottom: 5px; text-transform: uppercase; }
         .input-group input { padding: 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; outline: none; }
+        
         .action-bar { display: flex; gap: 15px; align-items: flex-end; margin-bottom: 30px; padding-top: 15px; border-top: 1px solid #eee; }
         .btn-search { background: var(--primary); color: white; border: none; padding: 0 35px; height: 48px; border-radius: 30px; font-weight: bold; cursor: pointer; transition: 0.3s; }
         
@@ -39,17 +40,21 @@
 </div>
 
 <div class="container">
-    <div class="version-badge">v1.3.2</div>
+    <div class="version-badge">v1.3.4</div>
     <h2><i class="fa-solid fa-chart-line"></i> Portal RNF - Performance Geral</h2>
 
     <div class="search-section">
         <div class="input-group">
             <label>CNPJ do Posto</label>
-            <input type="text" id="buscaCnpj" placeholder="Digite o CNPJ..." oninput="filtrarBanco()">
+            <input type="text" id="buscaCnpj" placeholder="CNPJ..." oninput="filtrarBanco()">
         </div>
         <div class="input-group">
             <label>Razão Social</label>
             <input type="text" id="razaoShow" readonly style="background:#f1f3f5">
+        </div>
+        <div class="input-group">
+            <label>Responsável</label>
+            <input type="text" id="analistaShow" readonly style="background:#f1f3f5; font-weight:bold; color:var(--primary)">
         </div>
         <div class="input-group">
             <label>ID Estabelecimento</label>
@@ -101,11 +106,20 @@
             const buffer = await res.arrayBuffer();
             const csv = new TextDecoder('utf-8').decode(buffer);
             const linhas = csv.split(/\r?\n/).filter(l => l.trim() !== "");
+            
             dadosPlanilha = linhas.slice(1).map(l => {
                 const c = l.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
+                
+                // Normalização do CNPJ para busca estável
                 let cnpjLimpo = (c[1] || "").replace(/\D/g, '').trim();
                 if(cnpjLimpo.length > 0 && cnpjLimpo.length < 14) cnpjLimpo = cnpjLimpo.padStart(14, '0');
-                return { id: c[0]?.replace(/"/g, '').trim(), cnpj: cnpjLimpo, razao: c[2]?.replace(/"/g, '').trim() };
+                
+                return { 
+                    id: c[0]?.replace(/"/g, '').trim(), 
+                    cnpj: cnpjLimpo, 
+                    razao: c[2]?.replace(/"/g, '').trim(),
+                    responsavel: c[3]?.replace(/"/g, '').trim() // Captura a 4ª coluna
+                };
             });
         } catch (e) { console.error("Erro planilha:", e); }
     };
@@ -113,13 +127,16 @@
     function filtrarBanco() {
         let busca = document.getElementById('buscaCnpj').value.replace(/\D/g, "");
         if(busca.length > 0 && busca.length < 14) busca = busca.padStart(14, '0');
+        
         const p = dadosPlanilha.find(item => item.cnpj === busca);
         if (p) {
             document.getElementById('razaoShow').value = p.razao;
             document.getElementById('idShow').value = p.id;
+            document.getElementById('analistaShow').value = p.responsavel || "Não atribuído";
         } else {
             document.getElementById('razaoShow').value = "";
             document.getElementById('idShow').value = "";
+            document.getElementById('analistaShow').value = "";
         }
     }
 
@@ -150,7 +167,6 @@
             const data = await response.json();
             const lista = data.abastecimentos || [];
 
-            // Preencher Dashboard
             dash.style.display = 'grid';
             document.getElementById('totalTrans').innerText = f(data.totalTransacionado);
             document.getElementById('totalRec').innerText = f(data.totalRecolhido);
