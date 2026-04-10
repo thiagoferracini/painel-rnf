@@ -3,145 +3,97 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Portal RNF v1.6.0 Pro - Ailog Tecnologia</title>
+    <title>Portal RNF v1.6.1 Pro - Ailog Tecnologia</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
-        /* Variáveis de Cor Modernas */
         :root { 
-            --primary: #5cb8a1; /* Verde Ailog */
-            --apple-blue: #0071e3; 
-            --bg: #f5f5f7; 
-            --card-bg: #ffffff;
-            --alert: #d9534f; 
-            --text-main: #1d1d1f; 
-            --text-sub: #86868b;
-            --warning: #f0ad4e; 
-            --border: #e6e6e9;
+            --primary: #5cb8a1; --apple-blue: #0071e3; --bg: #f5f5f7; --card-bg: #ffffff;
+            --alert: #d9534f; --text-main: #1d1d1f; --text-sub: #86868b; --warning: #f0ad4e; --border: #e6e6e9;
         }
 
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg); margin: 0; padding: 20px; color: var(--text-main); -webkit-font-smoothing: antialiased; }
         .container { max-width: 1300px; margin: auto; background: var(--card-bg); padding: 30px; border-radius: 16px; box-shadow: 0 8px 30px rgba(0,0,0,0.05); position: relative; }
         .version-badge { position: absolute; top: 15px; right: 25px; font-size: 11px; color: #bbb; font-weight: bold; }
         
-        /* Títulos */
         h2 { font-weight: 700; font-size: 28px; margin-top: 0; margin-bottom: 5px; letter-spacing: -0.5px; }
         h2 span { font-weight: 400; color: var(--text-sub); font-size: 18px; }
 
-        /* Seção de Busca */
         .search-section { background: #fdfdfd; padding: 20px; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 25px; display: grid; grid-template-columns: 1fr 1.5fr 1fr 1fr; gap: 15px; }
         .input-group { display: flex; flex-direction: column; }
         .input-group label { font-size: 10px; font-weight: 700; color: var(--text-sub); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
-        .input-group input { padding: 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px; transition: border-color 0.2s; }
-        .input-group input:focus { border-color: var(--apple-blue); outline: none; box-shadow: 0 0 0 3px rgba(0,113,227,0.1); }
-        .input-group input[readonly] { background: #fbfbfb; color: var(--text-sub); cursor: not-allowed; }
+        .input-group input { padding: 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px; }
 
-        /* Dashboard Moderno */
         #dashGeral { display: none; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 30px; }
-        .card { background: var(--card-bg); padding: 20px; border-radius: 12px; border: 1px solid var(--border); display: flex; align-items: center; gap: 15px; transition: transform 0.2s; }
-        .card:hover { transform: translateY(-3px); box-shadow: 0 5px 15px rgba(0,0,0,0.05); }
-        .card-icon { font-size: 24px; width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
-        .card-data { display: flex; flex-direction: column; }
+        .card { background: var(--card-bg); padding: 20px; border-radius: 12px; border: 1px solid var(--border); display: flex; align-items: center; gap: 15px; }
         .card-data span { font-size: 11px; font-weight: 600; color: var(--text-sub); text-transform: uppercase; }
-        .card-data b { font-size: 18px; font-weight: 700; letter-spacing: -0.5px; }
+        .card-data b { font-size: 18px; font-weight: 700; }
 
-        /* Botões Principais */
         .action-bar { display: flex; gap: 12px; margin-bottom: 25px; border-top: 1px solid var(--border); padding-top: 20px; align-items: flex-end;}
-        .btn-main { background: var(--apple-blue); color: white; border: none; padding: 12px 28px; border-radius: 30px; font-weight: 600; font-size: 14px; cursor: pointer; transition: background 0.2s, transform 0.1s; display: flex; align-items: center; gap: 8px; }
-        .btn-main:hover { background: #005bb5; }
-        .btn-main:active { transform: scale(0.98); }
+        .btn-main { background: var(--apple-blue); color: white; border: none; padding: 12px 28px; border-radius: 30px; font-weight: 600; font-size: 14px; cursor: pointer; display: flex; align-items: center; gap: 8px; }
         
-        /* Tabela Profissional */
+        /* TABELA COM ORDENAÇÃO */
         table { width: 100%; border-collapse: collapse; margin-top: 10px; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
-        th { text-align: left; padding: 14px; background: #fdfdfd; font-size: 11px; color: var(--text-sub); text-transform: uppercase; font-weight: 700; border-bottom: 2px solid var(--border); }
-        td { padding: 14px; border-bottom: 1px solid var(--border); font-size: 13px; color: var(--text-main); }
+        th { text-align: left; padding: 14px; background: #fdfdfd; font-size: 11px; color: var(--text-sub); text-transform: uppercase; font-weight: 700; border-bottom: 2px solid var(--border); cursor: pointer; transition: background 0.2s; }
+        th:hover { background: #f1f1f1; color: var(--text-main); }
+        th i { margin-left: 5px; font-size: 10px; color: #ccc; }
+        
+        td { padding: 14px; border-bottom: 1px solid var(--border); font-size: 13px; }
         tr:nth-child(even) { background-color: #fbfbfb; }
-        tr:hover { background-color: #f5faff; }
 
-        /* Botão de Ação na Linha */
-        .btn-action { background: var(--card-bg); color: var(--primary); border: 1px solid var(--primary); padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 600; transition: all 0.2s; display: flex; align-items: center; gap: 6px; margin: auto; }
-        .btn-action:hover { background: var(--primary); color: white; box-shadow: 0 2px 8px rgba(92,184,161,0.3); }
+        .btn-action { background: var(--card-bg); color: var(--primary); border: 1px solid var(--primary); padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 600; display: flex; align-items: center; gap: 6px; margin: auto; }
+        .btn-action:hover { background: var(--primary); color: white; }
 
-        /* MODAL PRO */
-        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); backdrop-filter: blur(5px); animation: fadeIn 0.3s; }
-        .modal-content { background: var(--card-bg); margin: 8% auto; padding: 0; border-radius: 16px; width: 480px; box-shadow: 0 15px 50px rgba(0,0,0,0.2); overflow: hidden; animation: slideUp 0.3s; }
-        
+        /* MODAL */
+        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); backdrop-filter: blur(5px); }
+        .modal-content { background: var(--card-bg); margin: 8% auto; border-radius: 16px; width: 480px; box-shadow: 0 15px 50px rgba(0,0,0,0.2); overflow: hidden; }
         .modal-header { padding: 20px 25px; background: #fdfdfd; border-bottom: 1px solid var(--border); position: relative;}
-        .modal-header h3 { margin: 0; font-size: 18px; font-weight: 700; }
-        .modal-header span { font-size: 12px; color: var(--text-sub); }
-        .close-modal { position: absolute; top: 15px; right: 20px; font-size: 20px; color: var(--text-sub); cursor: pointer; }
-        .close-modal:hover { color: var(--text-main); }
-
         .modal-body { padding: 25px; }
-        .modal-footer { padding: 15px 25px; background: #fdfdfd; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 10px; }
-        
-        /* Status no Modal */
         .status-options { display: flex; gap: 10px; margin-bottom: 25px; }
-        .btn-st { flex: 1; border: 2px solid transparent; padding: 12px; border-radius: 10px; color: white; cursor: pointer; font-weight: 700; font-size: 12px; opacity: 0.5; transition: all 0.2s; text-transform: uppercase;}
-        .btn-st.selected { opacity: 1; transform: translateY(-3px); box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
-        .btn-st.selected.st-rec { border-color: #a3e0cd; }
-        .btn-st.selected.st-pen { border-color: #eeacab; }
-        .btn-st.selected.st-agu { border-color: #f7dca8; }
-
-        textarea { width: 100%; padding: 12px; border-radius: 8px; border: 1px solid var(--border); font-family: inherit; font-size: 14px; box-sizing: border-box; resize: none; transition: border-color 0.2s; }
-        textarea:focus { border-color: var(--apple-blue); outline: none;}
-
-        /* Animações */
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        .btn-st { flex: 1; border: none; padding: 12px; border-radius: 10px; color: white; cursor: pointer; font-weight: 700; opacity: 0.5; }
+        .btn-st.selected { opacity: 1; transform: translateY(-3px); }
+        textarea { width: 100%; padding: 12px; border-radius: 8px; border: 1px solid var(--border); font-family: inherit; box-sizing: border-box; resize: none; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <div class="version-badge">v1.6.0 Pro</div>
+    <div class="version-badge">v1.6.1 Pro</div>
     <h2><i class="fa-solid fa-chart-line" style="color:var(--primary); margin-right:10px;"></i>Gestão de Recolha <span>por Unidade</span></h2>
 
     <div class="search-section">
         <div class="input-group"><label>CNPJ</label><input type="text" id="buscaCnpj" placeholder="00.000.000/0000-00" oninput="filtrarBanco()"></div>
-        <div class="input-group"><label>Matriz</label><input type="text" id="razaoShow" readonly placeholder="Razão Social"></div>
-        <div class="input-group"><label>Analista Responsável</label><input type="text" id="analistaShow" readonly placeholder="Nome do Analista"></div>
-        <div class="input-group"><label>ID</label><input type="text" id="idShow" readonly placeholder="----"></div>
+        <div class="input-group"><label>Matriz</label><input type="text" id="razaoShow" readonly></div>
+        <div class="input-group"><label>Analista</label><input type="text" id="analistaShow" readonly></div>
+        <div class="input-group"><label>ID</label><input type="text" id="idShow" readonly></div>
     </div>
 
     <div id="dashGeral">
-        <div class="card">
-            <div class="card-icon" style="background: rgba(0,113,227,0.1); color: var(--apple-blue);"><i class="fa-solid fa-file-invoice-dollar"></i></div>
-            <div class="card-data"><span>Faturamento Bruto</span><b id="totalTrans">R$ 0,00</b></div>
-        </div>
-        <div class="card">
-            <div class="card-icon" style="background: rgba(92,184,161,0.1); color: var(--primary);"><i class="fa-solid fa-hand-holding-dollar"></i></div>
-            <div class="card-data"><span>Total Recolhido</span><b id="totalRec" style="color: green;">R$ 0,00</b></div>
-        </div>
-        <div class="card">
-            <div class="card-icon" style="background: rgba(217,83,79,0.1); color: var(--alert);"><i class="fa-solid fa-receipt"></i></div>
-            <div class="card-data"><span>Pendente Geral</span><b id="totalPen" style="color: var(--alert);">R$ 0,00</b></div>
-        </div>
-        <div class="card">
-            <div class="card-icon" style="background: rgba(240,173,78,0.1); color: var(--warning);"><i class="fa-solid fa-percent"></i></div>
-            <div class="card-data"><span>Eficiência Total</span><b id="totalPerc">0%</b></div>
-        </div>
+        <div class="card"><div class="card-data"><span>Faturamento</span><b id="totalTrans">R$ 0,00</b></div></div>
+        <div class="card"><div class="card-data"><span>Recolhido</span><b id="totalRec" style="color: green;">R$ 0,00</b></div></div>
+        <div class="card"><div class="card-data"><span>Pendente</span><b id="totalPen" style="color: var(--alert);">R$ 0,00</b></div></div>
+        <div class="card"><div class="card-data"><span>Eficiência</span><b id="totalPerc">0%</b></div></div>
     </div>
 
     <div class="action-bar">
         <div class="input-group"><label>Início</label><input type="date" id="dInicio" value="2026-03-01"></div>
         <div class="input-group"><label>Fim</label><input type="date" id="dFim" value="2026-03-31"></div>
         <button class="btn-main" onclick="consultarWebrouter()"><i class="fa-solid fa-magnifying-glass"></i>BUSCAR DADOS</button>
-        <button class="btn-main" style="background:#1d6f42" onclick="exportarExcel()"><i class="fa-solid fa-file-excel"></i>EXPORTAR EXCEL</button>
+        <button class="btn-main" style="background:#1d6f42" onclick="exportarExcel()"><i class="fa-solid fa-file-excel"></i>EXPORTAR</button>
     </div>
 
     <table id="tabelaMaster">
         <thead>
             <tr>
-                <th>Unidade / Cliente</th>
-                <th>Total Bruto</th>
-                <th>Recolhido</th>
-                <th>Eficiência</th>
-                <th style="text-align: center;">Ação</th>
+                <th onclick="ordenarTabela(0)">Unidade <i class="fa-solid fa-sort"></i></th>
+                <th onclick="ordenarTabela(1)">Total Bruto <i class="fa-solid fa-sort"></i></th>
+                <th onclick="ordenarTabela(2)">Recolhido <i class="fa-solid fa-sort"></i></th>
+                <th onclick="ordenarTabela(3)">Eficiência <i class="fa-solid fa-sort"></i></th>
+                <th style="text-align: center; cursor: default;">Ação</th>
             </tr>
         </thead>
         <tbody id="corpoTabela">
-            <tr><td colspan="5" style="text-align:center; padding:50px; color:var(--text-sub);">Use a busca acima para listar as unidades.</td></tr>
+            <tr><td colspan="5" style="text-align:center; padding:50px; color:var(--text-sub);">Pesquise o posto acima.</td></tr>
         </tbody>
     </table>
 </div>
@@ -150,39 +102,26 @@
     <div class="modal-content">
         <div class="modal-header">
             <h3 id="modalTitulo">Unidade X</h3>
-            <span id="modalValores">Total: R$ 0 | Rec: R$ 0</span>
-            <span class="close-modal" onclick="fecharModal()">&times;</span>
+            <span id="modalValores">Valores</span>
         </div>
-        
         <div class="modal-body">
-            <label style="font-size:11px; font-weight:700; color:var(--text-sub); display:block; margin-bottom:10px; text-transform:uppercase;">DEFINIR STATUS:</label>
             <div class="status-options">
-                <button class="btn-st st-rec" style="background:var(--primary)" onclick="selectStatus('Recolhido', this)"><i class="fa-solid fa-check"></i> Recolhido</button>
-                <button class="btn-st st-pen" style="background:var(--alert)" onclick="selectStatus('Pendente', this)"><i class="fa-solid fa-xmark"></i> Pendente</button>
-                <button class="btn-st st-agu" style="background:var(--warning)" onclick="selectStatus('Aguardando', this)"><i class="fa-solid fa-clock"></i> Aguardando</button>
+                <button class="btn-st" style="background:var(--primary)" onclick="selectStatus('Recolhido', this)">Recolhido</button>
+                <button class="btn-st" style="background:var(--alert)" onclick="selectStatus('Pendente', this)">Pendente</button>
+                <button class="btn-st" style="background:var(--warning)" onclick="selectStatus('Aguardando', this)">Aguardando</button>
             </div>
-
-            <label style="font-size:11px; font-weight:700; color:var(--text-sub); display:block; margin-bottom:10px; text-transform:uppercase;">OBSERVAÇÕES DO ANALISTA:</label>
-            <textarea id="modalObs" rows="5" placeholder="Digite detalhes do contato ou motivo da pendência..."></textarea>
+            <textarea id="modalObs" rows="5" placeholder="Observações..."></textarea>
         </div>
-
-        <div class="modal-footer">
-            <button class="btn-main" style="background:#888; padding: 10px 20px;" onclick="fecharModal()">CANCELAR</button>
-            <button class="btn-main" style="padding: 10px 20px;" onclick="salvarAcaoModal()"><i class="fa-solid fa-cloud-arrow-up"></i>SALVAR HISTÓRICO</button>
+        <div style="padding: 15px 25px; display: flex; justify-content: flex-end; gap: 10px; background: #fdfdfd;">
+            <button class="btn-main" style="background:#888" onclick="fecharModal()">CANCELAR</button>
+            <button class="btn-main" onclick="salvarAcaoModal()">SALVAR</button>
         </div>
     </div>
 </div>
 
 <script>
-    const CONFIG = {
-        TOKEN: "eyJhbGciOiJub25lIn0.eyJkYXRhRXhwaXJhY2FvIjoxNzc1MTg1MTk3Mzg1LCJpZFJldmVuZGEiOjEsImFwaVJvdXRlciI6IlRPTVRPTSIsImlzQWRtaW5TaXN0ZW1hIjp0cnVlLCJhY2Vzc2FSb3RhSW5kaXZpZHVhbFVzdWFyaW8iOmZhbHNlLCJpc1VzYUxpY2VuY2FSZXZlbmRhIjpmYWxzZSwiaWRUcmFuc3BvcnRhZG9yIjoyMDAwMzQ5LCJpZFVzciI6MzA3OSwibm9tZVVzdWFyaW8iOiJBbmEgQy5CLldvc3phayIsIm5vbWVUcmFuc3BvcnRhZG9yIjoiVFJBTlNQT1JUQURPUkEgQUlMT0ciLCJpZERvY3RvT3duZXIiOjE4NSwiaWRFbXByZXNhIjoyLCJpc0NsaWVudGVBSUxvZyI6dHJ1ZSwiaWRMaWNlbmNhUmV2ZW5kYSI6LTEsImlkR3J1cG9Vc3IiOjMxN30.", // v1.3.2 Functional
-        CSV: "https://docs.google.com/spreadsheets/d/e/2PACX-1vRvPcDWisDWzvafrlP118lQ1t7RIliQDE1zTdqzJVU-r6CC4vm6CkYA0CIT18NiGRNJ4UqnBeD9lXWf/pub?output=csv", // v1.3.2 Functional
-        URL_SCRIPT: "https://script.google.com/macros/s/AKfycbxQ8KOKzTetUQfg7vyBLTH9u6rz78HvdJhDLLAmc7wNmnO8s7CMc9SZd8Yw05DOKaL5pQ/exec" // v1.4.0 Functional
-    };
-
-    let dadosPlanilha = [];
-    let unidadeAtual = {}; 
-    let statusSelecionado = "";
+    const CONFIG = { TOKEN: "eyJhbGciOiJub25lIn0.eyJkYXRhRXhwaXJhY2FvIjoxNzc1MTg1MTk3Mzg1LCJpZFJldmVuZGEiOjEsImFwaVJvdXRlciI6IlRPTVRPTSIsImlzQWRtaW5TaXN0ZW1hIjp0cnVlLCJhY2Vzc2FSb3RhSW5kaXZpZHVhbFVzdWFyaW8iOmZhbHNlLCJpc1VzYUxpY2VuY2FSZXZlbmRhIjpmYWxzZSwiaWRUcmFuc3BvcnRhZG9yIjoyMDAwMzQ5LCJpZFVzciI6MzA3OSwibm9tZVVzdWFyaW8iOiJBbmEgQy5CLldvc3phayIsIm5vbWVUcmFuc3BvcnRhZG9yIjoiVFJBTlNQT1JUQURPUkEgQUlMT0ciLCJpZERvY3RvT3duZXIiOjE4NSwiaWRFbXByZXNhIjoyLCJpc0NsaWVudGVBSUxvZyI6dHJ1ZSwiaWRMaWNlbmNhUmV2ZW5kYSI6LTEsImlkR3J1cG9Vc3IiOjMxN30.", CSV: "https://docs.google.com/spreadsheets/d/e/2PACX-1vRvPcDWisDWzvafrlP118lQ1t7RIliQDE1zTdqzJVU-r6CC4vm6CkYA0CIT18NiGRNJ4UqnBeD9lXWf/pub?output=csv", URL_SCRIPT: "https://script.google.com/macros/s/AKfycbxQ8KOKzTetUQfg7vyBLTH9u6rz78HvdJhDLLAmc7wNmnO8s7CMc9SZd8Yw05DOKaL5pQ/exec" };
+    let dadosPlanilha = [], listaAtual = [], direcaoSort = 1;
 
     window.onload = async () => {
         const res = await fetch(CONFIG.CSV);
@@ -190,7 +129,7 @@
         const linhas = csv.split(/\r?\n/).filter(l => l.trim() !== "");
         dadosPlanilha = linhas.slice(1).map(l => {
             const c = l.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
-            return { id: c[0]?.replace(/"/g, ''), cnpj: c[1]?.replace(/\D/g, '').padStart(14,'0'), razao: c[2]?.replace(/"/g, ''), analista: c[10]?.replace(/"/g, '') }; // Coluna K mantida
+            return { id: c[0]?.replace(/"/g, ''), cnpj: c[1]?.replace(/\D/g, '').padStart(14,'0'), razao: c[2]?.replace(/"/g, ''), analista: c[10]?.replace(/"/g, '') };
         });
     };
 
@@ -206,10 +145,8 @@
 
     async function consultarWebrouter() {
         const id = document.getElementById('idShow').value;
-        if(!id) return alert("Selecione um posto pelo CNPJ.");
+        if(!id) return alert("Busque o posto primeiro.");
         const fData = (d) => d.split("-").reverse().join("/");
-        const corpo = document.getElementById('corpoTabela');
-        corpo.innerHTML = "<tr><td colspan='5' style='text-align:center; padding:50px;'>Consultando API Webrouter...</td></tr>";
         
         try {
             const res = await fetch("https://cors-anywhere.herokuapp.com/https://way.webrouter.com.br/recolhaDocumentos/abastecimentos/filtro/clientes", {
@@ -218,107 +155,68 @@
                 body: JSON.stringify({ "periodo": { "dataInicio": fData(document.getElementById('dInicio').value), "dataFim": fData(document.getElementById('dFim').value) }, "estabelecimento": { "id": Number(id) }, "somenteMeusPostos": false })
             });
             const data = await res.json();
+            listaAtual = data.abastecimentos || [];
             
+            // Dashboard
             document.getElementById('dashGeral').style.display = 'grid';
             document.getElementById('totalTrans').innerText = f(data.totalTransacionado);
             document.getElementById('totalRec').innerText = f(data.totalRecolhido);
             document.getElementById('totalPen').innerText = f(data.totalTransacionado - data.totalRecolhido);
             const perc = (data.totalTransacionado > 0 ? (data.totalRecolhido/data.totalTransacionado*100).toFixed(1) : 0);
             document.getElementById('totalPerc').innerText = perc + "%";
-            document.getElementById('totalPerc').style.color = perc >= 92 ? 'green' : 'var(--alert)';
-
-            corpo.innerHTML = "";
-            if (data.abastecimentos.length === 0) {
-                corpo.innerHTML = "<tr><td colspan='5' style='text-align:center; padding:50px; color:var(--text-sub);'>Nenhuma unidade encontrada para este período.</td></tr>";
-                return;
-            }
-
-            data.abastecimentos.forEach((item, idx) => {
-                const t = item.valorTotal || 0, r = item.valorRecolhido || 0;
-                const p = t > 0 ? ((r/t)*100).toFixed(1) : 0;
-                corpo.innerHTML += `
-                    <tr>
-                        <td><b>${item.cliente.razaoSocial}</b></td>
-                        <td>${f(t)}</td>
-                        <td style="color:green; font-weight:600;">${f(r)}</td>
-                        <td style="font-weight:700; color:${p >= 92 ? 'green' : 'var(--alert)'}">${p}%</td>
-                        <td style="text-align:center;">
-                            <button class="btn-action" onclick="abrirModal('${item.cliente.razaoSocial}', ${t}, ${r})">
-                                <i class="fa-solid fa-pen-to-square"></i>AÇÃO
-                            </button>
-                        </td>
-                    </tr>`;
-            });
-        } catch (e) { corpo.innerHTML = "<tr><td colspan='5' style='text-align:center; color:var(--alert); padding:50px;'>Erro na conexão com a API.</td></tr>"; }
+            
+            renderizarTabela(listaAtual);
+        } catch (e) { alert("Erro na API."); }
     }
 
-    // FUNÇÕES DO MODAL (v1.5.5 mantido com melhoria visual)
+    function renderizarTabela(dados) {
+        const corpo = document.getElementById('corpoTabela');
+        corpo.innerHTML = "";
+        dados.forEach(item => {
+            const t = item.valorTotal || 0, r = item.valorRecolhido || 0, p = t > 0 ? ((r/t)*100).toFixed(1) : 0;
+            corpo.innerHTML += `<tr>
+                <td><b>${item.cliente.razaoSocial}</b></td>
+                <td>${f(t)}</td><td style="color:green">${f(r)}</td>
+                <td style="font-weight:700; color:${p >= 92 ? 'green' : 'var(--alert)'}">${p}%</td>
+                <td style="text-align:center;"><button class="btn-action" onclick="abrirModal('${item.cliente.razaoSocial}', ${t}, ${r})">AÇÃO</button></td>
+            </tr>`;
+        });
+    }
+
+    function ordenarTabela(coluna) {
+        direcaoSort *= -1;
+        listaAtual.sort((a, b) => {
+            let valA, valB;
+            if (coluna === 0) { valA = a.cliente.razaoSocial; valB = b.cliente.razaoSocial; }
+            else if (coluna === 1) { valA = a.valorTotal; valB = b.valorTotal; }
+            else if (coluna === 2) { valA = a.valorRecolhido; valB = b.valorRecolhido; }
+            else { valA = (a.valorRecolhido/a.valorTotal); valB = (b.valorRecolhido/b.valorTotal); }
+            
+            return valA > valB ? (1 * direcaoSort) : (-1 * direcaoSort);
+        });
+        renderizarTabela(listaAtual);
+    }
+
+    // MODAL FUNCTIONS (Mantidas da v1.6.0)
     function abrirModal(nome, total, rec) {
         unidadeAtual = { nome, total, rec };
-        statusSelecionado = "";
         document.getElementById('modalTitulo').innerText = nome;
         document.getElementById('modalValores').innerText = `Total: ${f(total)} | Rec: ${f(rec)}`;
         document.getElementById('modalObs').value = "";
-        document.querySelectorAll('.btn-st').forEach(b => b.classList.remove('selected'));
-        
-        // Reset header color
-        document.querySelector('.modal-header').style.background = '#fdfdfd';
-        document.querySelector('.modal-header h3').style.color = 'var(--text-main)';
-
         document.getElementById('modalAcao').style.display = 'block';
     }
-
     function fecharModal() { document.getElementById('modalAcao').style.display = 'none'; }
-
-    // Fecha modal clicando fora
-    window.onclick = function(event) {
-        let modal = document.getElementById('modalAcao');
-        if (event.target == modal) { fecharModal(); }
-    }
-
     function selectStatus(st, btn) {
         statusSelecionado = st;
         document.querySelectorAll('.btn-st').forEach(b => b.classList.remove('selected'));
         btn.classList.add('selected');
-        
-        // Dynamic header color based on status
-        let header = document.querySelector('.modal-header');
-        let title = document.querySelector('.modal-header h3');
-        title.style.color = 'white';
-        
-        if(st === 'Recolhido') header.style.background = 'var(--primary)';
-        if(st === 'Pendente') header.style.background = 'var(--alert)';
-        if(st === 'Aguardando') header.style.background = 'var(--warning)';
     }
-
     async function salvarAcaoModal() {
-        if(!statusSelecionado) return alert("Erro: Selecione um status (Recolhido, Pendente ou Aguardando)!");
-        
-        const payload = {
-            cnpj: document.getElementById('buscaCnpj').value,
-            posto: document.getElementById('razaoShow').value,
-            unidade: unidadeAtual.nome,
-            total: f(unidadeAtual.total),
-            rec: f(unidadeAtual.rec),
-            status: statusSelecionado,
-            analista: document.getElementById('analistaShow').value,
-            obs: document.getElementById('modalObs').value
-        };
-
-        try {
-            await fetch(CONFIG.URL_SCRIPT, { method: 'POST', mode: 'no-cors', body: JSON.stringify(payload) }); // doPOST v1.4.0 mantido
-            alert("Sucesso! Ação registrada na planilha.");
-            fecharModal();
-        } catch (e) { alert("Erro ao salvar dados na planilha."); }
+        const payload = { cnpj: document.getElementById('buscaCnpj').value, posto: document.getElementById('razaoShow').value, unidade: unidadeAtual.nome, total: f(unidadeAtual.total), rec: f(unidadeAtual.rec), status: statusSelecionado, analista: document.getElementById('analistaShow').value, obs: document.getElementById('modalObs').value };
+        await fetch(CONFIG.URL_SCRIPT, { method: 'POST', mode: 'no-cors', body: JSON.stringify(payload) });
+        alert("Salvo!"); fecharModal();
     }
-
-    function exportarExcel() {
-        const table = document.getElementById("tabelaMaster");
-        const wb = XLSX.utils.table_to_book(table);
-        const nomePosto = document.getElementById('razaoShow').value || "Geral";
-        XLSX.writeFile(wb, `RNF_Unidades_${nomePosto}.xlsx`);
-    }
-
+    function exportarExcel() { XLSX.writeFile(XLSX.utils.table_to_book(document.getElementById("tabelaMaster")), "Relatorio.xlsx"); }
     function f(v) { return (v || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }); }
 </script>
 </body>
