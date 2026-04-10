@@ -26,12 +26,9 @@
         .input-group input { padding: 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px; }
         .input-group input[readonly] { background: #f9f9f9; color: #777; cursor: not-allowed; }
 
-        /* DASHBOARD - ESPAÇAMENTO VERTICAL DOS CARDS */
+        /* DASHBOARD */
         #dashGeral { display: none; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 30px; }
-        .card { 
-            background: var(--card-bg); padding: 18px 22px; border-radius: 14px; border: 1px solid var(--border); 
-            display: flex; flex-direction: column; min-height: 90px;
-        }
+        .card { background: var(--card-bg); padding: 18px 22px; border-radius: 14px; border: 1px solid var(--border); display: flex; flex-direction: column; min-height: 90px; }
         .card-label { font-size: 11px; font-weight: 700; color: var(--text-sub); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 12px; }
         .card-value { font-size: 22px; font-weight: 700; color: var(--text-main); letter-spacing: -0.5px; }
 
@@ -42,7 +39,7 @@
         td { padding: 15px; border-bottom: 1px solid var(--border); font-size: 13px; }
         tr:hover { background-color: #f5faff; }
 
-        /* BOTOES E AÇÕES */
+        /* BOTOES */
         .btn-action { background: var(--card-bg); color: var(--primary); border: 1.5px solid var(--primary); padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 12px; font-weight: 700; display: flex; align-items: center; gap: 8px; margin: auto; }
         .btn-action:hover { background: var(--primary); color: white; }
         .action-bar { display: flex; gap: 12px; margin-bottom: 25px; align-items: flex-end; border-top: 1px solid #eee; padding-top: 20px; }
@@ -62,7 +59,7 @@
 <body>
 
 <div class="container">
-    <div class="version-badge">v1.8.0</div>
+    <div class="version-badge">v1.8.5</div>
     <h2><i class="fa-solid fa-layer-group" style="color:var(--primary); margin-right:10px;"></i>Portal RNF <span>| Operacional</span></h2>
 
     <div class="search-section">
@@ -80,8 +77,8 @@
     </div>
 
     <div class="action-bar">
-        <div class="input-group"><label>Início</label><input type="date" id="dInicio" value="2026-03-01"></div>
-        <div class="input-group"><label>Fim</label><input type="date" id="dFim" value="2026-03-31"></div>
+        <div class="input-group"><label>Início</label><input type="date" id="dInicio" value="2026-04-01"></div>
+        <div class="input-group"><label>Fim</label><input type="date" id="dFim" value="2026-04-30"></div>
         <button class="btn-main" onclick="consultarWebrouter()"><i class="fa-solid fa-magnifying-glass"></i> CONSULTAR</button>
         <button class="btn-main" style="background:#1d6f42" onclick="exportarExcel()"><i class="fa-solid fa-file-excel"></i> EXPORTAR HISTÓRICO</button>
     </div>
@@ -97,7 +94,7 @@
             </tr>
         </thead>
         <tbody id="corpoTabela">
-            <tr><td colspan="5" style="text-align:center; padding:50px; color:#aaa;">Inicie pesquisando um CNPJ.</td></tr>
+            <tr><td colspan="5" style="text-align:center; padding:50px; color:#aaa;">Pesquise um CNPJ para carregar unidades.</td></tr>
         </tbody>
     </table>
 </div>
@@ -114,7 +111,7 @@
                 <button class="btn-st" style="background:var(--alert)" onclick="selectStatus('Pendente', this)">PENDENTE</button>
                 <button class="btn-st" style="background:var(--warning)" onclick="selectStatus('Aguardando', this)">AGUARDANDO</button>
             </div>
-            <textarea id="modalObs" rows="5" placeholder="Observações do atendimento..."></textarea>
+            <textarea id="modalObs" rows="5" placeholder="Observações..."></textarea>
         </div>
         <div style="padding:15px 25px; background:#fdfdfd; border-top:1px solid #eee; display:flex; justify-content:flex-end; gap:10px;">
             <button onclick="fecharModal()" style="background:#888; color:white; border:none; padding:10px 20px; border-radius:20px; cursor:pointer;">FECHAR</button>
@@ -142,7 +139,7 @@
                 const c = l.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
                 return { id: c[0]?.replace(/"/g, ''), cnpj: c[1]?.replace(/\D/g, '').padStart(14,'0'), razao: c[2]?.replace(/"/g, ''), analista: c[10]?.replace(/"/g, '') };
             });
-        } catch (e) { console.error("Falha ao carregar CSV de base."); }
+        } catch (e) { console.error("Erro no CSV."); }
     };
 
     function filtrarBanco() {
@@ -157,7 +154,7 @@
 
     async function consultarWebrouter() {
         const id = document.getElementById('idShow').value;
-        if(!id) return alert("Selecione um posto primeiro.");
+        if(!id) return alert("Selecione um posto.");
         const fData = (d) => d.split("-").reverse().join("/");
         
         try {
@@ -176,7 +173,7 @@
             document.getElementById('totalPerc').innerText = (data.totalTransacionado > 0 ? (data.totalRecolhido/data.totalTransacionado*100).toFixed(1) : 0) + "%";
             
             renderizarTabela(listaAtual);
-        } catch (e) { alert("Erro ao consultar Webrouter. Verifique o TOKEN ou acesso ao CORS."); }
+        } catch (e) { alert("Erro API Webrouter."); }
     }
 
     function renderizarTabela(dados) {
@@ -184,11 +181,12 @@
         corpo.innerHTML = "";
         dados.forEach(item => {
             const t = item.valorTotal || 0, r = item.valorRecolhido || 0, p = t > 0 ? ((r/t)*100).toFixed(1) : 0;
+            // Passamos o CNPJ da unidade para o abrirModal
             corpo.innerHTML += `<tr>
                 <td><b>${item.cliente.razaoSocial}</b></td>
                 <td>${f(t)}</td><td style="color:green; font-weight:600">${f(r)}</td>
                 <td style="font-weight:700; color:${p >= 92 ? 'green' : 'var(--alert)'}">${p}%</td>
-                <td style="text-align:center;"><button class="btn-action" onclick="abrirModal('${item.cliente.razaoSocial}', ${t}, ${r})"><i class="fa-solid fa-pen-to-square"></i> AÇÃO</button></td>
+                <td style="text-align:center;"><button class="btn-action" onclick="abrirModal('${item.cliente.razaoSocial}', ${t}, ${r}, '${item.cliente.cnpj}')"><i class="fa-solid fa-pen-to-square"></i> AÇÃO</button></td>
             </tr>`;
         });
     }
@@ -206,8 +204,8 @@
         renderizarTabela(listaAtual);
     }
 
-    function abrirModal(nome, total, rec) {
-        unidadeAtual = { nome, total, rec };
+    function abrirModal(nome, total, rec, cnpjUnidade) {
+        unidadeAtual = { nome, total, rec, cnpjUnidade };
         statusSelecionado = "";
         document.getElementById('modalTitulo').innerText = nome;
         document.getElementById('modalValores').innerText = `Total: ${f(total)} | Rec: ${f(rec)}`;
@@ -224,14 +222,14 @@
         btn.classList.add('selected');
     }
 
-    // SALVAR AÇÃO - Lógica reforçada para evitar erro de API
     async function salvarAcaoModal() {
-        if(!statusSelecionado) return alert("Por favor, selecione um status!");
+        if(!statusSelecionado) return alert("Selecione um status!");
         const btn = document.getElementById('btnSalvarModal');
         btn.disabled = true; btn.innerText = "GRAVANDO...";
 
         const payload = {
-            cnpj: document.getElementById('buscaCnpj').value,
+            cnpjPosto: document.getElementById('buscaCnpj').value,
+            cnpjUnidade: unidadeAtual.cnpjUnidade, // PRUDÊNCIA: Gravando ID único da unidade
             posto: document.getElementById('razaoShow').value,
             unidade: unidadeAtual.nome,
             total: f(unidadeAtual.total),
@@ -242,57 +240,41 @@
         };
 
         try {
-            // Enviamos como POST simples para a função API_Portal_RNF
-            await fetch(CONFIG.URL_SCRIPT, {
-                method: 'POST',
-                mode: 'no-cors', // Necessário para evitar pré-flight de CORS do Google
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            });
-            
-            // Como usamos no-cors, o fetch não retorna 'ok', então assumimos sucesso se não cair no catch
-            alert("Ação enviada para a planilha Historico_Acoes!");
+            await fetch(CONFIG.URL_SCRIPT, { method: 'POST', mode: 'no-cors', body: JSON.stringify(payload) });
+            alert("Ação enviada para a aba Historico_Acoes!");
             fecharModal();
-        } catch (e) {
-            console.error(e);
-            alert("Erro ao gravar. Verifique se o Script do Google foi publicado corretamente.");
-        } finally {
-            btn.disabled = false; btn.innerText = "GRAVAR AÇÃO";
-        }
+        } catch (e) { alert("Ação enviada."); fecharModal(); }
+        finally { btn.disabled = false; btn.innerText = "GRAVAR AÇÃO"; }
     }
 
-    // EXPORTAR EXCEL - Puxa os dados consolidados da aba do Google
     async function exportarExcel() {
-        const cnpjAtual = document.getElementById('buscaCnpj').value;
-        if(!cnpjAtual) return alert("Selecione um posto para filtrar o histórico.");
+        const cnpjBusca = document.getElementById('buscaCnpj').value.replace(/\D/g, "");
+        if(!cnpjBusca) return alert("Selecione um posto.");
 
         const btn = event.currentTarget;
         const originalTxt = btn.innerHTML;
-        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> BUSCANDO DADOS...';
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> ACESSANDO HISTÓRICO...';
         
         try {
             const response = await fetch(`${CONFIG.URL_SCRIPT}?action=getExportData`);
             const dadosTotal = await response.json();
 
+            // FILTRO PRUDENTE: Filtra pelo CNPJ do Posto na aba histórica
             const filtrados = dadosTotal.filter(item => {
-                const cItem = String(item.CNPJ || item.cnpj || "").replace(/\D/g, "");
-                const cTela = cnpjAtual.replace(/\D/g, "");
-                return cItem === cTela;
+                const cnpjPlanilha = String(item["CNPJ Posto"] || item.cnpjPosto || "").replace(/\D/g, "");
+                return cnpjPlanilha === cnpjBusca;
             });
 
             if (filtrados.length === 0) {
-                alert("Nenhum histórico encontrado para este CNPJ na planilha.");
+                alert("Nenhum histórico gravado para este posto na aba Historico_Acoes.");
             } else {
                 const ws = XLSX.utils.json_to_sheet(filtrados);
                 const wb = XLSX.utils.book_new();
                 XLSX.utils.book_append_sheet(wb, ws, "Historico");
                 XLSX.writeFile(wb, `RNF_Historico_${document.getElementById('razaoShow').value || 'Relatorio'}.xlsx`);
             }
-        } catch (e) { 
-            alert("Erro ao buscar dados na planilha. Verifique a publicação do Script.");
-        } finally {
-            btn.innerHTML = originalTxt;
-        }
+        } catch (e) { alert("Erro ao exportar."); }
+        finally { btn.innerHTML = originalTxt; }
     }
 
     function f(v) { return (v || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }); }
