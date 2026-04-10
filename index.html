@@ -3,53 +3,46 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistema de Gestão RNF - Ailog Tecnologia</title>
+    <title>Portal RNF v1.0.4 - Ailog Tecnologia</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         :root { --primary: #5cb8a1; --apple-blue: #0071e3; --bg: #f5f5f7; --alert: #d9534f; --text: #1d1d1f; }
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background: var(--bg); margin: 0; padding: 20px; color: var(--text); }
-        .container { max-width: 1250px; margin: auto; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+        .container { max-width: 1250px; margin: auto; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); position: relative; }
+        
+        /* Badge de Versão */
+        .version-badge { position: absolute; top: 10px; right: 20px; font-size: 10px; color: #aaa; font-weight: bold; }
+        
         h2 { font-weight: 600; border-bottom: 1px solid #eee; padding-bottom: 15px; margin-top: 0; display: flex; align-items: center; gap: 10px; }
         
-        /* Seção de Busca */
         .search-section { background: #eef2f7; padding: 20px; border-radius: 10px; margin-bottom: 20px; display: grid; grid-template-columns: 1.5fr 2fr 1fr; gap: 15px; align-items: flex-end; }
         .input-group { display: flex; flex-direction: column; }
         .input-group label { font-size: 11px; font-weight: bold; color: #666; margin-bottom: 5px; text-transform: uppercase; }
-        .input-group input { padding: 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; outline: none; transition: 0.2s; }
+        .input-group input { padding: 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; outline: none; }
         
-        /* Card de Informações do Posto */
-        .info-card { display: none; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; background: #fff; border: 1px solid #eee; padding: 15px; border-radius: 8px; margin-bottom: 20px; border-left: 5px solid var(--apple-blue); animation: fadeIn 0.3s ease; }
-        .info-item b { color: var(--apple-blue); display: block; font-size: 10px; text-transform: uppercase; }
-        .info-item span { font-size: 13px; font-weight: 500; }
-
-        /* Ações e Filtros */
         .action-bar { display: flex; gap: 15px; align-items: flex-end; margin-bottom: 30px; padding-top: 15px; border-top: 1px solid #eee; }
-        .input-wrapper { position: relative; display: flex; align-items: center; width: 100%; }
-        .input-wrapper i { position: absolute; left: 12px; color: #888; }
-        .input-wrapper input { padding-left: 35px !important; width: 100%; }
-
         .btn-search { background: var(--primary); color: white; border: none; padding: 0 35px; height: 48px; border-radius: 30px; font-weight: bold; cursor: pointer; transition: 0.3s; display: flex; align-items: center; gap: 10px; }
         .btn-search:hover { background: #4da38f; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(92, 184, 161, 0.3); }
 
-        /* Tabela */
         table { width: 100%; border-collapse: collapse; margin-top: 10px; }
         th { text-align: left; padding: 12px; background: #f8f9fa; font-size: 11px; color: #86868b; text-transform: uppercase; border-bottom: 2px solid #dee2e6; }
         td { padding: 12px; border-bottom: 1px solid #eee; font-size: 13px; }
         .meta-ok { color: #1e7e34; font-weight: bold; }
         .meta-alert { color: var(--alert); font-weight: bold; }
-
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .footer-info { margin-top: 20px; font-size: 11px; color: #999; text-align: center; }
     </style>
 </head>
 <body>
 
 <div class="container">
+    <div class="version-badge">v1.0.4</div>
     <h2><i class="fa-solid fa-layer-group"></i> Portal RNF - Performance de Recolha</h2>
 
     <div class="search-section">
         <div class="input-group">
-            <label>Digite o CNPJ</label>
-            <input type="text" id="buscaCnpj" placeholder="Ex: 84.704.410/0001-03" oninput="filtrarBanco()">
+            <label>CNPJ do Posto</label>
+            <input type="text" id="buscaCnpj" placeholder="Digite o CNPJ..." oninput="filtrarBanco()">
         </div>
         <div class="input-group">
             <label>Razão Social</label>
@@ -61,26 +54,14 @@
         </div>
     </div>
 
-    <div id="detalhesPosto" class="info-card">
-        <div class="info-item"><b>Responsável</b> <span id="infoResp">-</span></div>
-        <div class="info-item"><b>Cidade/UF</b> <span id="infoCidade">-</span></div>
-        <div class="info-item"><b>Logradouro</b> <span id="infoEnd">-</span></div>
-    </div>
-
     <div class="action-bar">
         <div class="input-group" style="flex: 1;">
             <label>Data Início</label>
-            <div class="input-wrapper">
-                <i class="fa-regular fa-calendar"></i>
-                <input type="date" id="dInicio" value="2026-03-01">
-            </div>
+            <input type="date" id="dInicio" value="2026-03-01">
         </div>
         <div class="input-group" style="flex: 1;">
             <label>Data Fim</label>
-            <div class="input-wrapper">
-                <i class="fa-regular fa-calendar"></i>
-                <input type="date" id="dFim" value="2026-03-31">
-            </div>
+            <input type="date" id="dFim" value="2026-03-31">
         </div>
         <div class="input-group" style="flex: 2;">
             <label>Token de Acesso</label>
@@ -91,22 +72,24 @@
         </button>
     </div>
 
-    <div id="tabelaArea">
-        <table>
-            <thead>
-                <tr>
-                    <th>Posto / Cliente</th>
-                    <th>Valor Total</th>
-                    <th>Pendente</th>
-                    <th>Pausado</th>
-                    <th>Recolhido</th>
-                    <th>Eficiência (%)</th>
-                </tr>
-            </thead>
-            <tbody id="corpoTabela">
-                <tr><td colspan="6" style="text-align:center; padding: 40px; color:#999;">Aguardando pesquisa...</td></tr>
-            </tbody>
-        </table>
+    <table id="tabelaDados">
+        <thead>
+            <tr>
+                <th>Posto / Cliente</th>
+                <th>Valor Total</th>
+                <th>Pendente</th>
+                <th>Pausado</th>
+                <th>Recolhido</th>
+                <th>Eficiência (%)</th>
+            </tr>
+        </thead>
+        <tbody id="corpoTabela">
+            <tr><td colspan="6" style="text-align:center; padding: 40px; color:#999;">Aguardando pesquisa...</td></tr>
+        </tbody>
+    </table>
+
+    <div class="footer-info">
+        Ailog Tecnologia - Sistema de Monitoramento de Faturamento RNF
     </div>
 </div>
 
@@ -114,77 +97,65 @@
     let dadosPlanilha = [];
     const LINK_CSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRvPcDWisDWzvafrlP118lQ1t7RIliQDE1zTdqzJVU-r6CC4vm6CkYA0CIT18NiGRNJ4UqnBeD9lXWf/pub?output=csv";
 
-    // 1. Sincronização inicial com o Google Sheets
+    // Carregamento do Banco de Dados (Sheets)
     window.onload = async () => {
         try {
             const res = await fetch(LINK_CSV);
             const buffer = await res.arrayBuffer();
             const csv = new TextDecoder('utf-8').decode(buffer);
-            const linhas = csv.split(/\r?\n/).filter(line => line.trim() !== "");
-            
+            const linhas = csv.split(/\r?\n/).filter(l => l.trim() !== "");
             dadosPlanilha = linhas.slice(1).map(l => {
                 const c = l.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
                 return {
                     id: c[0]?.replace(/"/g, '').trim(),
                     cnpj: c[1]?.replace(/"/g, '').replace(/\D/g, '').trim(),
-                    razao: c[2]?.replace(/"/g, '').trim(),
-                    end: c[4]?.replace(/"/g, '').trim(),
-                    num: c[5]?.replace(/"/g, '').trim(),
-                    cidade: c[8]?.replace(/"/g, '').trim(),
-                    uf: c[9]?.replace(/"/g, '').trim(),
-                    resp: c[10]?.replace(/"/g, '').trim()
+                    razao: c[2]?.replace(/"/g, '').trim()
                 };
             });
-            console.log("Planilha sincronizada!");
-        } catch (e) { console.error("Erro ao carregar dados locais:", e); }
+            console.log("v1.0.4: Banco de dados sincronizado.");
+        } catch (e) { console.error("Erro planilha:", e); }
     };
 
-    // 2. Filtro de Posto por CNPJ
     function filtrarBanco() {
         const busca = document.getElementById('buscaCnpj').value.replace(/\D/g, "");
         const p = dadosPlanilha.find(item => item.cnpj === busca);
-        const card = document.getElementById('detalhesPosto');
-
         if (p) {
             document.getElementById('razaoShow').value = p.razao;
             document.getElementById('idShow').value = p.id;
-            document.getElementById('infoResp').innerText = p.resp || 'N/A';
-            document.getElementById('infoCidade').innerText = `${p.cidade} / ${p.uf}`;
-            document.getElementById('infoEnd').innerText = `${p.end}, ${p.num}`;
-            card.style.display = 'grid';
-        } else {
-            document.getElementById('razaoShow').value = "Não encontrado";
-            document.getElementById('idShow').value = "";
-            card.style.display = 'none';
         }
     }
 
-    // 3. Consulta à API Webrouter com Tratamento de Datas
     async function consultarWebrouter() {
         const id = document.getElementById('idShow').value;
         const token = document.getElementById('token').value;
         const corpo = document.getElementById('corpoTabela');
 
-        // Função interna para garantir o formato DD/MM/YYYY
-        const formatarParaAPI = (dataStr) => {
-            if (dataStr.includes("-")) {
-                const [ano, mes, dia] = dataStr.split("-");
-                return `${dia}/${mes}/${ano}`;
-            }
-            return dataStr;
+        // Formatação de data rigorosa para a API (DD/MM/YYYY)
+        const fData = (d) => {
+            if (!d.includes("-")) return d;
+            const [a, m, dia] = d.split("-");
+            return `${dia}/${m}/${a}`;
         };
 
-        const dInicio = formatarParaAPI(document.getElementById('dInicio').value);
-        const dFim = formatarParaAPI(document.getElementById('dFim').value);
+        const dInicio = fData(document.getElementById('dInicio').value);
+        const dFim = fData(document.getElementById('dFim').value);
 
-        if(!id || !token) return alert("Selecione um posto válido e insira o Token!");
+        if(!id || !token) return alert("Erro: Localize o posto e insira o Token.");
 
-        corpo.innerHTML = "<tr><td colspan='6' style='text-align:center;'>Consultando API...</td></tr>";
+        corpo.innerHTML = "<tr><td colspan='6' style='text-align:center;'>Conectando à API via Proxy...</td></tr>";
+
+        // Proxy para evitar erro de CORS no GitHub
+        const proxy = "https://cors-anywhere.herokuapp.com/";
+        const apiUrl = "https://way.webrouter.com.br/recolhaDocumentos/abastecimentos/filtro/clientes";
 
         try {
-            const response = await fetch("https://way.webrouter.com.br/recolhaDocumentos/abastecimentos/filtro/clientes", {
+            const response = await fetch(proxy + apiUrl, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'token': token },
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'token': token,
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
                 body: JSON.stringify({
                     "periodo": { "dataInicio": dInicio, "dataFim": dFim },
                     "estabelecimento": { "id": parseInt(id) },
@@ -192,11 +163,13 @@
                 })
             });
 
+            if (!response.ok) throw new Error("Falha na autenticação ou bloqueio de Proxy.");
+
             const data = await response.json();
             const lista = data.registros || data.content || [];
 
             if (lista.length === 0) {
-                corpo.innerHTML = "<tr><td colspan='6' style='text-align:center;'>Nenhum registro encontrado para este filtro.</td></tr>";
+                corpo.innerHTML = "<tr><td colspan='6' style='text-align:center;'>Nenhum registro encontrado para v1.0.4.</td></tr>";
                 return;
             }
 
@@ -208,7 +181,7 @@
 
                 corpo.innerHTML += `
                     <tr>
-                        <td><b>${item.cliente?.razaoSocial || 'Registro'}</b></td>
+                        <td><b>${item.cliente?.razaoSocial || 'Cliente'}</b></td>
                         <td>${f(total)}</td>
                         <td>${f(item.valorPendente)}</td>
                         <td style="color:orange">${f(item.valorPausado)}</td>
@@ -217,7 +190,7 @@
                     </tr>`;
             });
         } catch (e) {
-            corpo.innerHTML = `<tr><td colspan='6' style='color:red; text-align:center;'>Erro de conexão: ${e.message}</td></tr>`;
+            corpo.innerHTML = `<tr><td colspan='6' style='color:red; text-align:center;'>Erro Crítico: Se for o primeiro acesso, ative o proxy em <a href="https://cors-anywhere.herokuapp.com/corsdemo" target="_blank">CORS Anywhere</a></td></tr>`;
         }
     }
 
