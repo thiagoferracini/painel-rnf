@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Portal RNF v1.3.0 - Ailog Tecnologia</title>
+    <title>Portal RNF v1.3.1 - Ailog Tecnologia</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         :root { --primary: #5cb8a1; --apple-blue: #0071e3; --bg: #f5f5f7; --alert: #d9534f; --text: #1d1d1f; }
@@ -12,17 +12,15 @@
         .version-badge { position: absolute; top: 10px; right: 20px; font-size: 10px; color: #aaa; font-weight: bold; }
         
         /* Dashboard Cards */
-        .dashboard { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 25px; display: none; }
-        .card { background: #fff; border: 1px solid #eee; padding: 15px; border-radius: 10px; text-align: center; box-shadow: 0 2px 5px rgba(0,0,0,0.02); }
-        .card span { display: block; font-size: 11px; color: #86868b; text-transform: uppercase; font-weight: bold; margin-bottom: 5px; }
-        .card b { font-size: 18px; color: var(--text); }
-        .card.highlight b { color: var(--primary); }
+        #dashGeral { display: none; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 25px; }
+        .card { background: #f8f9fa; border: 1px solid #eee; padding: 15px; border-radius: 10px; text-align: center; }
+        .card span { display: block; font-size: 10px; color: #86868b; text-transform: uppercase; font-weight: bold; margin-bottom: 5px; }
+        .card b { font-size: 16px; color: var(--text); }
 
         .search-section { background: #eef2f7; padding: 20px; border-radius: 10px; margin-bottom: 20px; display: grid; grid-template-columns: 1.5fr 2fr 1fr; gap: 15px; align-items: flex-end; }
         .input-group { display: flex; flex-direction: column; }
         .input-group label { font-size: 11px; font-weight: bold; color: #666; margin-bottom: 5px; text-transform: uppercase; }
         .input-group input { padding: 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; outline: none; }
-        
         .action-bar { display: flex; gap: 15px; align-items: flex-end; margin-bottom: 30px; padding-top: 15px; border-top: 1px solid #eee; }
         .btn-search { background: var(--primary); color: white; border: none; padding: 0 35px; height: 48px; border-radius: 30px; font-weight: bold; cursor: pointer; transition: 0.3s; }
         
@@ -37,12 +35,12 @@
 <body>
 
 <div id="avisoProxy" class="alert-box">
-    ⚠️ <b>Acesso Bloqueado:</b> Clique em <a href="https://cors-anywhere.herokuapp.com/corsdemo" target="_blank">Ativar Acesso</a> para liberar o uso.
+    ⚠️ <b>Acesso Bloqueado:</b> Clique em <a href="https://cors-anywhere.herokuapp.com/corsdemo" target="_blank">Ativar Acesso Temporário</a> para liberar o uso dos dados.
 </div>
 
 <div class="container">
-    <div class="version-badge">v1.3.0</div>
-    <h2><i class="fa-solid fa-chart-pie"></i> Portal RNF - Performance Geral</h2>
+    <div class="version-badge">v1.3.1</div>
+    <h2><i class="fa-solid fa-chart-line"></i> Portal RNF - Gestão Ailog</h2>
 
     <div class="search-section">
         <div class="input-group">
@@ -59,11 +57,11 @@
         </div>
     </div>
 
-    <div class="dashboard" id="dashGeral">
-        <div class="card"><span>Faturamento Total</span><b id="totalTrans">R$ 0,00</b></div>
-        <div class="card"><span>Total Recolhido</span><b id="totalRec" style="color: green;">R$ 0,00</b></div>
-        <div class="card"><span>Pendente Geral</span><b id="totalPen" style="color: var(--alert);">R$ 0,00</b></div>
-        <div class="card highlight"><span>Eficiência Geral</span><b id="totalPerc">0%</b></div>
+    <div id="dashGeral">
+        <div class="card"><span>Total Bruto</span><b id="totalTrans">R$ 0,00</b></div>
+        <div class="card"><span>Recolhido</span><b id="totalRec" style="color: green;">R$ 0,00</b></div>
+        <div class="card"><span>Pendente</span><b id="totalPen" style="color: var(--alert);">R$ 0,00</b></div>
+        <div class="card"><span>Eficiência Geral</span><b id="totalPerc">0%</b></div>
     </div>
 
     <div class="action-bar">
@@ -72,7 +70,7 @@
         <button class="btn-search" onclick="consultarWebrouter()"><i class="fa-solid fa-magnifying-glass"></i> PESQUISAR</button>
     </div>
 
-    <table>
+    <table id="tabelaDados">
         <thead>
             <tr>
                 <th>Posto / Cliente</th>
@@ -91,7 +89,7 @@
 
 <script>
     const CONFIG = {
-        TOKEN_MASTER: "eyJhbGciOiJub25lIn0.eyJkYXRhRXhwaXJhY2FvIjoxNzc1MTg1MTk3Mzg1LCJpZFJldmVuZGEiOjEsImFwaVJvdXRlciI6IlRPTVRPTSIsImlzQWRtaW5TaXN0ZW1hIjp0cnVlLCJhY2Vzc2FSb3RhSW5kaXZpZHVhbFVzdWFyaW8iOmZhbHNlLCJpc1VzYUxpY2VuY2FSZXZlbmRhIjpmYWxzZSwiaWRUcmFuc3BvcnRhZG9yIjoyMDAwMzQ5LCJpZFVzciI6MzA3OSwibm9tZVVzdWFyaW8iOiJBbmEgQy5CLldvc3phayIsIm5vbWVUcmFuc3BvcnRhZG9yIjoiVFJBTlNQT1JUQURPUkEgQUlMT0ciLCJpZERvY3RvT3duZXIiOjE4NSwiaWRFbXByZXNhIjoyLCJpc0NsaWVudGVBSUxvZyI6dHJ1ZSwiaWRMaWNlbmNhUmV2ZW5kYSI6LTEsImlkR3J1cG9Vc3IiOjMxN30.", 
+        TOKEN_MASTER: "eyJhbGciOiJub25lIn0.eyJkYXRhRXhwaXJhY2FvIjoxNzc1MTg1MTk3Mzg1LCJpZFJldmVuZGEiOjEsImFwaVJvdXRlciI6IlRPTVRPTSIsImlzQWRtaW5TaXN0ZW1hIjp0cnVlLCJhY2Vzc2FSb3RhSW5kaXZpZHVhbFVzdWFyaW8iOmZhbHNlLCJpc1VzYUxpY2VuY2FSZXZlbmRhIjpmYWxzZSwiaWRUcmFuc3BvcnRhZG9yIjoyMDAwMzQ5LCJpZFVzciI6MzA3OSwibm9tZVVzdWFyaW8iOiJBbmEgQy5CLldvc3phayIsIm5vbWVUcmFuc3BvcnRhZG9yIjoiVFJBTlNQT1JUQURPUkEgQUlMT0ciLCJpZERvY3RvT3duZXIiOjE4NSwiaWRFbXByZXNhIjoyLCJpc0NsaWVudGVBSUxvZyI6dHJ1ZSwiaWRMaWNlbmNhUmV2ZW5kYSI6LTEsImlkR3J1cG9Vc3IiOjMxN30.", // Insira seu Token aqui
         LINK_CSV: "https://docs.google.com/spreadsheets/d/e/2PACX-1vRvPcDWisDWzvafrlP118lQ1t7RIliQDE1zTdqzJVU-r6CC4vm6CkYA0CIT18NiGRNJ4UqnBeD9lXWf/pub?output=csv"
     };
 
@@ -105,9 +103,9 @@
             const linhas = csv.split(/\r?\n/).filter(l => l.trim() !== "");
             dadosPlanilha = linhas.slice(1).map(l => {
                 const c = l.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
-                let cnpjPuro = (c[1] || "").replace(/"/g, '').replace(/\D/g, '').trim();
-                if(cnpjPuro.length > 0 && cnpjPuro.length < 14) cnpjPuro = cnpjPuro.padStart(14, '0');
-                return { id: c[0]?.replace(/"/g, '').trim(), cnpj: cnpjPuro, razao: c[2]?.replace(/"/g, '').trim() };
+                let cnpj = (c[1] || "").replace(/"/g, '').replace(/\D/g, '').trim();
+                if(cnpj.length > 0 && cnpj.length < 14) cnpj = cnpj.padStart(14, '0');
+                return { id: c[0]?.replace(/"/g, '').trim(), cnpj: cnpj, razao: c[2]?.replace(/"/g, '').trim() };
             });
         } catch (e) { console.error("Erro planilha:", e); }
     };
@@ -129,13 +127,13 @@
         const aviso = document.getElementById('avisoProxy');
         
         aviso.style.display = 'none';
-        if(!idRaw) return alert("Erro: Localize o posto primeiro.");
+        if(!idRaw) return alert("Identifique o posto primeiro.");
 
-        corpo.innerHTML = "<tr><td colspan='6' style='text-align:center;'>Consultando...</td></tr>";
+        corpo.innerHTML = "<tr><td colspan='6' style='text-align:center;'>Buscando...</td></tr>";
 
-        const fData = (d) => { const [a, m, dia] = d.split("-"); return `${dia}/${m}/${a}`; };
-        const dInicio = fData(document.getElementById('dInicio').value);
-        const dFim = fData(document.getElementById('dFim').value);
+        const fDate = (d) => { const [a, m, dia] = d.split("-"); return `${dia}/${m}/${a}`; };
+        const dInicio = fDate(document.getElementById('dInicio').value);
+        const dFim = fDate(document.getElementById('dFim').value);
 
         try {
             const response = await fetch("https://cors-anywhere.herokuapp.com/https://way.webrouter.com.br/recolhaDocumentos/abastecimentos/filtro/clientes", {
@@ -149,18 +147,17 @@
             const data = await response.json();
             const lista = data.abastecimentos || [];
 
-            // Preencher Dashboard Geral
+            // Dash Totais
             dash.style.display = 'grid';
             document.getElementById('totalTrans').innerText = f(data.totalTransacionado);
             document.getElementById('totalRec').innerText = f(data.totalRecolhido);
             document.getElementById('totalPen').innerText = f(data.totalTransacionado - data.totalRecolhido);
-            
-            const percGeral = data.totalTransacionado > 0 ? ((data.totalRecolhido / data.totalTransacionado) * 100).toFixed(1) : 0;
-            document.getElementById('totalPerc').innerText = percGeral + "%";
-            document.getElementById('totalPerc').style.color = percGeral >= 92 ? 'var(--primary)' : 'var(--alert)';
+            const perc = data.totalTransacionado > 0 ? ((data.totalRecolhido / data.totalTransacionado) * 100).toFixed(1) : 0;
+            document.getElementById('totalPerc').innerText = perc + "%";
+            document.getElementById('totalPerc').style.color = perc >= 92 ? 'green' : 'red';
 
             if (lista.length === 0) {
-                corpo.innerHTML = "<tr><td colspan='6' style='text-align:center;'>Sem registros detalhados.</td></tr>";
+                corpo.innerHTML = "<tr><td colspan='6' style='text-align:center;'>Nenhum registro no período.</td></tr>";
                 return;
             }
 
@@ -169,9 +166,20 @@
                 const total = item.valorTotal || 0;
                 const rec = item.valorRecolhido || 0;
                 const p = total > 0 ? ((rec / total) * 100).toFixed(1) : "0.0";
-                corpo.innerHTML += `<tr><td><b>${item.razaoSocial || 'Cliente'}</b></td><td>${f(total)}</td><td>${f(item.valorRecolher)}</td><td>${f(item.valorPausado)}</td><td>${f(rec)}</td><td class="${p >= 92 ? 'meta-ok' : 'meta-alert'}">${p}%</td></tr>`;
+                
+                // USANDO A ESTRUTURA DA v1.2.0 QUE FUNCIONA
+                const nomeCliente = item.cliente?.razaoSocial || item.razaoSocial || "Cliente";
+
+                corpo.innerHTML += `<tr>
+                    <td><b>${nomeCliente}</b></td>
+                    <td>${f(total)}</td>
+                    <td>${f(item.valorRecolher)}</td>
+                    <td>${f(item.valorPausado)}</td>
+                    <td>${f(rec)}</td>
+                    <td class="${p >= 92 ? 'meta-ok' : 'meta-alert'}">${p}%</td>
+                </tr>`;
             });
-        } catch (e) { corpo.innerHTML = "<tr><td colspan='6' style='color:red; text-align:center;'>Erro na conexão.</td></tr>"; }
+        } catch (e) { corpo.innerHTML = "<tr><td colspan='6' style='color:red; text-align:center;'>Erro de conexão.</td></tr>"; }
     }
     function f(v) { return (v || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }); }
 </script>
