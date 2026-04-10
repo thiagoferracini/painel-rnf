@@ -3,40 +3,33 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Portal RNF v1.0.4 - Ailog Tecnologia</title>
+    <title>Portal RNF v1.0.5 - Ailog Tecnologia</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         :root { --primary: #5cb8a1; --apple-blue: #0071e3; --bg: #f5f5f7; --alert: #d9534f; --text: #1d1d1f; }
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background: var(--bg); margin: 0; padding: 20px; color: var(--text); }
         .container { max-width: 1250px; margin: auto; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); position: relative; }
-        
-        /* Badge de Versão */
         .version-badge { position: absolute; top: 10px; right: 20px; font-size: 10px; color: #aaa; font-weight: bold; }
-        
         h2 { font-weight: 600; border-bottom: 1px solid #eee; padding-bottom: 15px; margin-top: 0; display: flex; align-items: center; gap: 10px; }
-        
         .search-section { background: #eef2f7; padding: 20px; border-radius: 10px; margin-bottom: 20px; display: grid; grid-template-columns: 1.5fr 2fr 1fr; gap: 15px; align-items: flex-end; }
         .input-group { display: flex; flex-direction: column; }
         .input-group label { font-size: 11px; font-weight: bold; color: #666; margin-bottom: 5px; text-transform: uppercase; }
         .input-group input { padding: 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; outline: none; }
-        
         .action-bar { display: flex; gap: 15px; align-items: flex-end; margin-bottom: 30px; padding-top: 15px; border-top: 1px solid #eee; }
         .btn-search { background: var(--primary); color: white; border: none; padding: 0 35px; height: 48px; border-radius: 30px; font-weight: bold; cursor: pointer; transition: 0.3s; display: flex; align-items: center; gap: 10px; }
         .btn-search:hover { background: #4da38f; transform: translateY(-2px); box-shadow: 0 4px 12px rgba(92, 184, 161, 0.3); }
-
         table { width: 100%; border-collapse: collapse; margin-top: 10px; }
         th { text-align: left; padding: 12px; background: #f8f9fa; font-size: 11px; color: #86868b; text-transform: uppercase; border-bottom: 2px solid #dee2e6; }
         td { padding: 12px; border-bottom: 1px solid #eee; font-size: 13px; }
         .meta-ok { color: #1e7e34; font-weight: bold; }
         .meta-alert { color: var(--alert); font-weight: bold; }
-        
         .footer-info { margin-top: 20px; font-size: 11px; color: #999; text-align: center; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <div class="version-badge">v1.0.4</div>
+    <div class="version-badge">v1.0.5</div>
     <h2><i class="fa-solid fa-layer-group"></i> Portal RNF - Performance de Recolha</h2>
 
     <div class="search-section">
@@ -88,16 +81,13 @@
         </tbody>
     </table>
 
-    <div class="footer-info">
-        Ailog Tecnologia - Sistema de Monitoramento de Faturamento RNF
-    </div>
+    <div class="footer-info">Ailog Tecnologia - Sistema de Monitoramento de Faturamento RNF</div>
 </div>
 
 <script>
     let dadosPlanilha = [];
     const LINK_CSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRvPcDWisDWzvafrlP118lQ1t7RIliQDE1zTdqzJVU-r6CC4vm6CkYA0CIT18NiGRNJ4UqnBeD9lXWf/pub?output=csv";
 
-    // Carregamento do Banco de Dados (Sheets)
     window.onload = async () => {
         try {
             const res = await fetch(LINK_CSV);
@@ -112,7 +102,7 @@
                     razao: c[2]?.replace(/"/g, '').trim()
                 };
             });
-            console.log("v1.0.4: Banco de dados sincronizado.");
+            console.log("v1.0.5: Banco sincronizado.");
         } catch (e) { console.error("Erro planilha:", e); }
     };
 
@@ -126,13 +116,11 @@
     }
 
     async function consultarWebrouter() {
-        const id = document.getElementById('idShow').value;
+        const idRaw = document.getElementById('idShow').value;
         const token = document.getElementById('token').value;
         const corpo = document.getElementById('corpoTabela');
 
-        // Formatação de data rigorosa para a API (DD/MM/YYYY)
         const fData = (d) => {
-            if (!d.includes("-")) return d;
             const [a, m, dia] = d.split("-");
             return `${dia}/${m}/${a}`;
         };
@@ -140,11 +128,10 @@
         const dInicio = fData(document.getElementById('dInicio').value);
         const dFim = fData(document.getElementById('dFim').value);
 
-        if(!id || !token) return alert("Erro: Localize o posto e insira o Token.");
+        if(!idRaw || !token) return alert("Erro: Localize o posto e insira o Token.");
 
-        corpo.innerHTML = "<tr><td colspan='6' style='text-align:center;'>Conectando à API via Proxy...</td></tr>";
+        corpo.innerHTML = "<tr><td colspan='6' style='text-align:center;'>Conectando...</td></tr>";
 
-        // Proxy para evitar erro de CORS no GitHub
         const proxy = "https://cors-anywhere.herokuapp.com/";
         const apiUrl = "https://way.webrouter.com.br/recolhaDocumentos/abastecimentos/filtro/clientes";
 
@@ -158,18 +145,16 @@
                 },
                 body: JSON.stringify({
                     "periodo": { "dataInicio": dInicio, "dataFim": dFim },
-                    "estabelecimento": { "id": parseInt(id) },
+                    "estabelecimento": { "id": Number(String(idRaw).trim()) },
                     "somenteMeusPostos": false
                 })
             });
-
-            if (!response.ok) throw new Error("Falha na autenticação ou bloqueio de Proxy.");
 
             const data = await response.json();
             const lista = data.registros || data.content || [];
 
             if (lista.length === 0) {
-                corpo.innerHTML = "<tr><td colspan='6' style='text-align:center;'>Nenhum registro encontrado para v1.0.4.</td></tr>";
+                corpo.innerHTML = "<tr><td colspan='6' style='text-align:center;'>Nenhum registro encontrado para v1.0.5.</td></tr>";
                 return;
             }
 
@@ -178,7 +163,6 @@
                 const total = item.valorTotal || 0;
                 const recolhido = item.valorRecolhido || 0;
                 const perc = total > 0 ? ((recolhido / total) * 100).toFixed(1) : "0.0";
-
                 corpo.innerHTML += `
                     <tr>
                         <td><b>${item.cliente?.razaoSocial || 'Cliente'}</b></td>
@@ -190,10 +174,9 @@
                     </tr>`;
             });
         } catch (e) {
-            corpo.innerHTML = `<tr><td colspan='6' style='color:red; text-align:center;'>Erro Crítico: Se for o primeiro acesso, ative o proxy em <a href="https://cors-anywhere.herokuapp.com/corsdemo" target="_blank">CORS Anywhere</a></td></tr>`;
+            corpo.innerHTML = `<tr><td colspan='6' style='color:red; text-align:center;'>Erro Crítico: Ative o proxy em <a href="https://cors-anywhere.herokuapp.com/corsdemo" target="_blank">CORS Anywhere</a></td></tr>`;
         }
     }
-
     function f(v) { return (v || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }); }
 </script>
 </body>
