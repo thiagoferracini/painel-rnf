@@ -3,54 +3,57 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Portal RNF v1.5.0 - Checklist Unidades</title>
+    <title>Portal RNF v1.5.5 - Modal Operacional</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
         :root { --primary: #5cb8a1; --apple-blue: #0071e3; --bg: #f5f5f7; --alert: #d9534f; --text: #1d1d1f; --warning: #f0ad4e; }
         body { font-family: -apple-system, sans-serif; background: var(--bg); margin: 0; padding: 20px; }
-        .container { max-width: 1400px; margin: auto; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); position: relative; }
-        .version-badge { position: absolute; top: 10px; right: 20px; font-size: 10px; color: #aaa; font-weight: bold; }
+        .container { max-width: 1250px; margin: auto; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); position: relative; }
         
-        .search-section { background: #eef2f7; padding: 20px; border-radius: 10px; margin-bottom: 20px; display: grid; grid-template-columns: 1fr 1.5fr 1fr 1fr; gap: 15px; align-items: flex-end; }
+        /* Busca e Dash (v1.3.6 mantido) */
+        .search-section { background: #eef2f7; padding: 20px; border-radius: 10px; margin-bottom: 20px; display: grid; grid-template-columns: 1fr 1.5fr 1fr 1fr; gap: 15px; }
         .input-group { display: flex; flex-direction: column; }
         .input-group label { font-size: 10px; font-weight: bold; color: #666; margin-bottom: 5px; text-transform: uppercase; }
-        .input-group input { padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 13px; }
-        
+        .input-group input { padding: 10px; border: 1px solid #ddd; border-radius: 6px; }
+
         #dashGeral { display: none; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 25px; }
         .card { background: #f8f9fa; padding: 12px; border-radius: 10px; text-align: center; border: 1px solid #eee; }
-        .card span { display: block; font-size: 10px; color: #888; font-weight: bold; }
         .card b { font-size: 15px; }
 
-        .action-bar { display: flex; gap: 15px; margin-bottom: 20px; border-top: 1px solid #eee; padding-top: 15px; }
         .btn-main { background: var(--apple-blue); color: white; border: none; padding: 12px 25px; border-radius: 30px; font-weight: bold; cursor: pointer; }
-        .btn-excel { background: #1d6f42; color: white; border: none; padding: 12px 25px; border-radius: 30px; font-weight: bold; cursor: pointer; }
-
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        th { text-align: left; padding: 10px; background: #f8f9fa; font-size: 11px; color: #888; border-bottom: 2px solid #ddd; }
-        td { padding: 10px; border-bottom: 1px solid #eee; font-size: 12px; vertical-align: middle; }
-
-        /* Controles por Linha */
-        .row-ops { display: flex; gap: 5px; }
-        .btn-st { border: none; padding: 5px 8px; border-radius: 4px; font-size: 9px; cursor: pointer; color: white; font-weight: bold; opacity: 0.3; }
-        .btn-st.active { opacity: 1; transform: scale(1.1); }
-        .obs-input { width: 150px; padding: 5px; border: 1px solid #ddd; border-radius: 4px; font-size: 11px; }
-        .btn-save-row { background: var(--primary); color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-size: 11px; }
         
-        .st-rec { background: var(--primary); }
-        .st-pen { background: var(--alert); }
-        .st-agu { background: var(--warning); }
+        /* Tabela Limpa */
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th { text-align: left; padding: 12px; background: #f8f9fa; font-size: 11px; color: #888; border-bottom: 2px solid #ddd; }
+        td { padding: 12px; border-bottom: 1px solid #eee; font-size: 13px; }
+
+        /* Estilo do Botão de Ação na Linha */
+        .btn-action { background: var(--primary); color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; }
+        .btn-action:hover { background: #4a9683; }
+
+        /* MODAL CSS */
+        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); }
+        .modal-content { background: white; margin: 10% auto; padding: 30px; border-radius: 15px; width: 450px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); }
+        .modal-header { border-bottom: 1px solid #eee; padding-bottom: 15px; margin-bottom: 20px; }
+        .modal-footer { border-top: 1px solid #eee; padding-top: 20px; margin-top: 20px; display: flex; justify-content: flex-end; gap: 10px; }
+        
+        .status-options { display: flex; gap: 10px; margin-bottom: 20px; }
+        .btn-st { flex: 1; border: none; padding: 10px; border-radius: 8px; color: white; cursor: pointer; font-weight: bold; opacity: 0.4; }
+        .btn-st.selected { opacity: 1; transform: translateY(-2px); box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
+        
+        textarea { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #ddd; font-family: inherit; box-sizing: border-box; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <div class="version-badge">v1.5.0 - OPERAÇÃO POR UNIDADE</div>
-    <h2><i class="fa-solid fa-list-check"></i> Checklist de Recolha por Cliente</h2>
+    <div class="version-badge">v1.5.5 - MODAL EDITION</div>
+    <h2><i class="fa-solid fa-users-viewfinder"></i> Gestão de Recolha por Unidade</h2>
 
     <div class="search-section">
         <div class="input-group"><label>CNPJ</label><input type="text" id="buscaCnpj" oninput="filtrarBanco()"></div>
-        <div class="input-group"><label>Posto Matriz</label><input type="text" id="razaoShow" readonly></div>
+        <div class="input-group"><label>Matriz</label><input type="text" id="razaoShow" readonly></div>
         <div class="input-group"><label>Analista</label><input type="text" id="analistaShow" readonly></div>
         <div class="input-group"><label>ID</label><input type="text" id="idShow" readonly></div>
     </div>
@@ -62,28 +65,51 @@
         <div class="card"><span>Eficiência</span><b id="totalPerc">0%</b></div>
     </div>
 
-    <div class="action-bar">
-        <input type="date" id="dInicio" value="2026-03-01">
-        <input type="date" id="dFim" value="2026-03-31">
-        <button class="btn-main" onclick="consultarWebrouter()">BUSCAR UNIDADES</button>
-        <button class="btn-excel" onclick="exportarXLSX()"><i class="fa-solid fa-file-excel"></i> EXCEL DO POSTO</button>
+    <div class="action-bar" style="display: flex; gap: 10px; align-items: flex-end;">
+        <div class="input-group"><label>Início</label><input type="date" id="dInicio" value="2026-03-01"></div>
+        <div class="input-group"><label>Fim</label><input type="date" id="dFim" value="2026-03-31"></div>
+        <button class="btn-main" onclick="consultarWebrouter()">BUSCAR DADOS</button>
+        <button class="btn-main" style="background:#1d6f42" onclick="exportarExcel()"><i class="fa-solid fa-file-excel"></i> EXPORTAR</button>
     </div>
 
     <table id="tabelaMaster">
         <thead>
             <tr>
-                <th>Cliente / Unidade</th>
-                <th>Total</th>
+                <th>Unidade / Cliente</th>
+                <th>Total Bruto</th>
                 <th>Recolhido</th>
-                <th>Status da Unidade</th>
-                <th>Observação</th>
-                <th>Ação</th>
+                <th>Eficiência</th>
+                <th style="text-align: center;">Ação</th>
             </tr>
         </thead>
         <tbody id="corpoTabela">
-            <tr><td colspan="6" style="text-align:center; padding:30px; color:#aaa;">Pesquise o posto para listar as unidades.</td></tr>
+            <tr><td colspan="5" style="text-align:center; padding:30px; color:#aaa;">Aguardando pesquisa...</td></tr>
         </tbody>
     </table>
+</div>
+
+<div id="modalAcao" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 id="modalTitulo" style="margin:0; color:var(--text)">Unidade X</h3>
+            <span id="modalValores" style="font-size:12px; color:#888">Total: R$ 0 | Rec: R$ 0</span>
+        </div>
+        
+        <label style="font-size:11px; font-weight:bold; color:#666; display:block; margin-bottom:10px;">DEFINIR STATUS:</label>
+        <div class="status-options">
+            <button class="btn-st" style="background:var(--primary)" onclick="selectStatus('Recolhido', this)">RECOLHIDO</button>
+            <button class="btn-st" style="background:var(--alert)" onclick="selectStatus('Pendente', this)">PENDENTE</button>
+            <button class="btn-st" style="background:var(--warning)" onclick="selectStatus('Aguardando', this)">AGUARDANDO</button>
+        </div>
+
+        <label style="font-size:11px; font-weight:bold; color:#666; display:block; margin-bottom:10px;">OBSERVAÇÕES:</label>
+        <textarea id="modalObs" rows="4" placeholder="Detalhes do contato..."></textarea>
+
+        <div class="modal-footer">
+            <button class="btn-main" style="background:#888" onclick="fecharModal()">CANCELAR</button>
+            <button class="btn-main" onclick="salvarAcaoModal()">SALVAR NO HISTÓRICO</button>
+        </div>
+    </div>
 </div>
 
 <script>
@@ -94,6 +120,8 @@
     };
 
     let dadosPlanilha = [];
+    let unidadeAtual = {}; // Guarda os dados da linha clicada
+    let statusSelecionado = "";
 
     window.onload = async () => {
         const res = await fetch(CONFIG.CSV);
@@ -117,20 +145,18 @@
 
     async function consultarWebrouter() {
         const id = document.getElementById('idShow').value;
-        if(!id) return alert("Busque o posto primeiro.");
-        
+        if(!id) return alert("Selecione um posto.");
         const fData = (d) => d.split("-").reverse().join("/");
         const corpo = document.getElementById('corpoTabela');
-        corpo.innerHTML = "<tr><td colspan='6' style='text-align:center;'>Carregando unidades...</td></tr>";
-
+        
         try {
             const res = await fetch("https://cors-anywhere.herokuapp.com/https://way.webrouter.com.br/recolhaDocumentos/abastecimentos/filtro/clientes", {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'token': CONFIG.TOKEN },
                 body: JSON.stringify({ "periodo": { "dataInicio": fData(document.getElementById('dInicio').value), "dataFim": fData(document.getElementById('dFim').value) }, "estabelecimento": { "id": Number(id) }, "somenteMeusPostos": false })
             });
-
             const data = await res.json();
+            
             document.getElementById('dashGeral').style.display = 'grid';
             document.getElementById('totalTrans').innerText = f(data.totalTransacionado);
             document.getElementById('totalRec').innerText = f(data.totalRecolhido);
@@ -139,61 +165,67 @@
 
             corpo.innerHTML = "";
             data.abastecimentos.forEach((item, idx) => {
+                const t = item.valorTotal || 0, r = item.valorRecolhido || 0;
+                const p = t > 0 ? ((r/t)*100).toFixed(1) : 0;
                 corpo.innerHTML += `
-                    <tr id="row-${idx}">
+                    <tr>
                         <td><b>${item.cliente.razaoSocial}</b></td>
-                        <td>${f(item.valorTotal)}</td>
-                        <td style="color:green">${f(item.valorRecolhido)}</td>
-                        <td>
-                            <div class="row-ops">
-                                <button class="btn-st st-rec" onclick="setRowSt(${idx}, 'Recolhido', this)">REC</button>
-                                <button class="btn-st st-pen" onclick="setRowSt(${idx}, 'Pendente', this)">PEN</button>
-                                <button class="btn-st st-agu" onclick="setRowSt(${idx}, 'Aguardando', this)">AGU</button>
-                            </div>
+                        <td>${f(t)}</td>
+                        <td style="color:green">${f(r)}</td>
+                        <td style="font-weight:bold; color:${p >= 92 ? 'green' : 'red'}">${p}%</td>
+                        <td style="text-align:center;">
+                            <button class="btn-action" onclick="abrirModal('${item.cliente.razaoSocial}', ${t}, ${r})">
+                                <i class="fa-solid fa-pen-to-square"></i> AÇÃO
+                            </button>
                         </td>
-                        <td><input type="text" class="obs-input" id="obs-${idx}" placeholder="Obs..."></td>
-                        <td><button class="btn-save-row" onclick="salvarLinha(${idx}, '${item.cliente.razaoSocial}', ${item.valorTotal}, ${item.valorRecolhido})">SALVAR</button></td>
                     </tr>`;
             });
-        } catch (e) { corpo.innerHTML = "Erro ao carregar."; }
+        } catch (e) { alert("Erro na API."); }
     }
 
-    function setRowSt(idx, status, btn) {
-        const row = document.getElementById(`row-${idx}`);
-        row.setAttribute('data-status', status);
-        row.querySelectorAll('.btn-st').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
+    // FUNÇÕES DO MODAL
+    function abrirModal(nome, total, rec) {
+        unidadeAtual = { nome, total, rec };
+        statusSelecionado = "";
+        document.getElementById('modalTitulo').innerText = nome;
+        document.getElementById('modalValores').innerText = `Total: ${f(total)} | Rec: ${f(rec)}`;
+        document.getElementById('modalObs').value = "";
+        document.querySelectorAll('.btn-st').forEach(b => b.classList.remove('selected'));
+        document.getElementById('modalAcao').style.display = 'block';
     }
 
-    async function salvarLinha(idx, unidade, total, rec) {
-        const status = document.getElementById(`row-${idx}`).getAttribute('data-status');
-        if(!status) return alert("Selecione um status primeiro!");
+    function fecharModal() { document.getElementById('modalAcao').style.display = 'none'; }
 
+    function selectStatus(st, btn) {
+        statusSelecionado = st;
+        document.querySelectorAll('.btn-st').forEach(b => b.classList.remove('selected'));
+        btn.classList.add('selected');
+    }
+
+    async function salvarAcaoModal() {
+        if(!statusSelecionado) return alert("Por favor, selecione um status!");
+        
         const payload = {
             cnpj: document.getElementById('buscaCnpj').value,
             posto: document.getElementById('razaoShow').value,
-            unidade: unidade,
-            total: f(total),
-            rec: f(rec),
-            status: status,
+            unidade: unidadeAtual.nome,
+            total: f(unidadeAtual.total),
+            rec: f(unidadeAtual.rec),
+            status: statusSelecionado,
             analista: document.getElementById('analistaShow').value,
-            obs: document.getElementById(`obs-${idx}`).value
+            obs: document.getElementById('modalObs').value
         };
 
-        const btn = document.querySelector(`#row-${idx} .btn-save-row`);
-        btn.innerText = "Salvando...";
-        
-        await fetch(CONFIG.URL_SCRIPT, { method: 'POST', mode: 'no-cors', body: JSON.stringify(payload) });
-        
-        btn.innerText = "SALVO!";
-        btn.style.background = "#6c757d";
+        try {
+            await fetch(CONFIG.URL_SCRIPT, { method: 'POST', mode: 'no-cors', body: JSON.stringify(payload) });
+            alert("Sucesso! Registro salvo na planilha.");
+            fecharModal();
+        } catch (e) { alert("Erro ao salvar."); }
     }
 
-    function exportarXLSX() {
-        // Pega a tabela, mas remove os botões para o Excel ficar limpo
-        const table = document.getElementById("tabelaMaster");
-        const wb = XLSX.utils.table_to_book(table);
-        XLSX.writeFile(wb, `Relatorio_Unidades_${document.getElementById('razaoShow').value}.xlsx`);
+    function exportarExcel() {
+        const wb = XLSX.utils.table_to_book(document.getElementById("tabelaMaster"));
+        XLSX.writeFile(wb, `RNF_Unidades_${document.getElementById('razaoShow').value}.xlsx`);
     }
 
     function f(v) { return (v || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }); }
