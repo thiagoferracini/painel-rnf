@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Portal RNF v1.0.7 - Ailog Tecnologia</title>
+    <title>Portal RNF v1.2.0 - Ailog Tecnologia</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         :root { --primary: #5cb8a1; --apple-blue: #0071e3; --bg: #f5f5f7; --alert: #d9534f; --text: #1d1d1f; }
@@ -23,14 +23,19 @@
         td { padding: 12px; border-bottom: 1px solid #eee; font-size: 13px; }
         .meta-ok { color: #1e7e34; font-weight: bold; }
         .meta-alert { color: var(--alert); font-weight: bold; }
+        .alert-box { background: #fff3cd; color: #856404; padding: 15px; border-radius: 8px; border: 1px solid #ffeeba; margin-bottom: 20px; display: none; text-align: center; }
         .footer-info { margin-top: 20px; font-size: 11px; color: #999; text-align: center; }
     </style>
 </head>
 <body>
 
+<div id="avisoProxy" class="alert-box">
+    ⚠️ <b>Acesso Bloqueado:</b> Clique em <a href="https://cors-anywhere.herokuapp.com/corsdemo" target="_blank">Ativar Acesso</a> e depois no botão prateado para liberar o uso.
+</div>
+
 <div class="container">
-    <div class="version-badge">v1.0.7</div>
-    <h2><i class="fa-solid fa-layer-group"></i> Portal RNF - Gestão de Recolha</h2>
+    <div class="version-badge">v1.2.0</div>
+    <h2><i class="fa-solid fa-layer-group"></i> Portal RNF - Ailog Tecnologia</h2>
 
     <div class="search-section">
         <div class="input-group">
@@ -48,24 +53,12 @@
     </div>
 
     <div class="action-bar">
-        <div class="input-group" style="flex: 1;">
-            <label>Data Início</label>
-            <input type="date" id="dInicio" value="2026-03-01">
-        </div>
-        <div class="input-group" style="flex: 1;">
-            <label>Data Fim</label>
-            <input type="date" id="dFim" value="2026-03-31">
-        </div>
-        <div class="input-group" style="flex: 2;">
-            <label>Token de Acesso</label>
-            <input type="password" id="token" placeholder="Insira seu token API...">
-        </div>
-        <button class="btn-search" onclick="consultarWebrouter()">
-            <i class="fa-solid fa-magnifying-glass"></i> PESQUISAR
-        </button>
+        <div class="input-group" style="flex: 1;"><label>Data Início</label><input type="date" id="dInicio" value="2026-03-01"></div>
+        <div class="input-group" style="flex: 1;"><label>Data Fim</label><input type="date" id="dFim" value="2026-03-31"></div>
+        <button class="btn-search" onclick="consultarWebrouter()"><i class="fa-solid fa-magnifying-glass"></i> PESQUISAR</button>
     </div>
 
-    <table id="tabelaDados">
+    <table>
         <thead>
             <tr>
                 <th>Posto / Cliente</th>
@@ -80,34 +73,51 @@
             <tr><td colspan="6" style="text-align:center; padding: 40px; color:#999;">Aguardando pesquisa...</td></tr>
         </tbody>
     </table>
-
-    <div class="footer-info">Ailog Tecnologia - Monitoramento de Faturamento RNF</div>
+    <div class="footer-info">Sistema Interno Ailog - Uso Restrito</div>
 </div>
 
 <script>
+    // CONFIGURAÇÃO PRIVADA - O analista não vê este campo na tela
+    const CONFIG = {
+        TOKEN_MASTER: "eyJhbGciOiJub25lIn0.eyJkYXRhRXhwaXJhY2FvIjoxNzc1MTg1MTk3Mzg1LCJpZFJldmVuZGEiOjEsImFwaVJvdXRlciI6IlRPTVRPTSIsImlzQWRtaW5TaXN0ZW1hIjp0cnVlLCJhY2Vzc2FSb3RhSW5kaXZpZHVhbFVzdWFyaW8iOmZhbHNlLCJpc1VzYUxpY2VuY2FSZXZlbmRhIjpmYWxzZSwiaWRUcmFuc3BvcnRhZG9yIjoyMDAwMzQ5LCJpZFVzciI6MzA3OSwibm9tZVVzdWFyaW8iOiJBbmEgQy5CLldvc3phayIsIm5vbWVUcmFuc3BvcnRhZG9yIjoiVFJBTlNQT1JUQURPUkEgQUlMT0ciLCJpZERvY3RvT3duZXIiOjE4NSwiaWRFbXByZXNhIjoyLCJpc0NsaWVudGVBSUxvZyI6dHJ1ZSwiaWRMaWNlbmNhUmV2ZW5kYSI6LTEsImlkR3J1cG9Vc3IiOjMxN30.", // Insira o token entre as aspas
+        LINK_CSV: "https://docs.google.com/spreadsheets/d/e/2PACX-1vRvPcDWisDWzvafrlP118lQ1t7RIliQDE1zTdqzJVU-r6CC4vm6CkYA0CIT18NiGRNJ4UqnBeD9lXWf/pub?output=csv"
+    };
+
     let dadosPlanilha = [];
-    const LINK_CSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRvPcDWisDWzvafrlP118lQ1t7RIliQDE1zTdqzJVU-r6CC4vm6CkYA0CIT18NiGRNJ4UqnBeD9lXWf/pub?output=csv";
 
     window.onload = async () => {
         try {
-            const res = await fetch(LINK_CSV);
+            const res = await fetch(CONFIG.LINK_CSV);
             const buffer = await res.arrayBuffer();
             const csv = new TextDecoder('utf-8').decode(buffer);
             const linhas = csv.split(/\r?\n/).filter(l => l.trim() !== "");
+            
             dadosPlanilha = linhas.slice(1).map(l => {
                 const c = l.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
+                
+                // AJUSTE: Normaliza o CNPJ da planilha para ter sempre 14 dígitos (zero à esquerda)
+                let cnpjPuro = (c[1] || "").replace(/"/g, '').replace(/\D/g, '').trim();
+                if(cnpjPuro.length > 0 && cnpjPuro.length < 14) {
+                    cnpjPuro = cnpjPuro.padStart(14, '0');
+                }
+
                 return {
                     id: c[0]?.replace(/"/g, '').trim(),
-                    cnpj: c[1]?.replace(/"/g, '').replace(/\D/g, '').trim(),
+                    cnpj: cnpjPuro,
                     razao: c[2]?.replace(/"/g, '').trim()
                 };
             });
-            console.log("v1.0.7: Banco sincronizado.");
+            console.log("v1.2.0: Banco sincronizado com correção de zeros.");
         } catch (e) { console.error("Erro planilha:", e); }
     };
 
     function filtrarBanco() {
-        const busca = document.getElementById('buscaCnpj').value.replace(/\D/g, "");
+        // AJUSTE: Também normaliza o CNPJ que o usuário digita
+        let busca = document.getElementById('buscaCnpj').value.replace(/\D/g, "");
+        if(busca.length > 0 && busca.length < 14) {
+            busca = busca.padStart(14, '0');
+        }
+
         const p = dadosPlanilha.find(item => item.cnpj === busca);
         if (p) {
             document.getElementById('razaoShow').value = p.razao;
@@ -117,11 +127,15 @@
 
     async function consultarWebrouter() {
         const idRaw = document.getElementById('idShow').value;
-        const token = document.getElementById('token').value;
         const corpo = document.getElementById('corpoTabela');
+        const aviso = document.getElementById('avisoProxy');
+        const token = CONFIG.TOKEN_MASTER; // Usa o token salvo internamente
+
+        aviso.style.display = 'none';
+
+        if(!idRaw) return alert("Erro: Localize o posto pelo CNPJ primeiro.");
 
         const fData = (d) => {
-            if (!d.includes("-")) return d;
             const [a, m, dia] = d.split("-");
             return `${dia}/${m}/${a}`;
         };
@@ -129,9 +143,7 @@
         const dInicio = fData(document.getElementById('dInicio').value);
         const dFim = fData(document.getElementById('dFim').value);
 
-        if(!idRaw || !token) return alert("Erro: Localize o posto e insira o Token.");
-
-        corpo.innerHTML = "<tr><td colspan='6' style='text-align:center;'>Consultando Webrouter...</td></tr>";
+        corpo.innerHTML = "<tr><td colspan='6' style='text-align:center;'>Buscando dados...</td></tr>";
 
         const proxy = "https://cors-anywhere.herokuapp.com/";
         const apiUrl = "https://way.webrouter.com.br/recolhaDocumentos/abastecimentos/filtro/clientes";
@@ -139,11 +151,7 @@
         try {
             const response = await fetch(proxy + apiUrl, {
                 method: 'POST',
-                headers: { 
-                    'Content-Type': 'application/json',
-                    'token': token,
-                    'X-Requested-With': 'XMLHttpRequest'
-                },
+                headers: { 'Content-Type': 'application/json', 'token': token, 'X-Requested-With': 'XMLHttpRequest' },
                 body: JSON.stringify({
                     "periodo": { "dataInicio": dInicio, "dataFim": dFim },
                     "estabelecimento": { "id": Number(idRaw) },
@@ -151,12 +159,17 @@
                 })
             });
 
+            if (response.status === 403) {
+                aviso.style.display = 'block';
+                corpo.innerHTML = "<tr><td colspan='6' style='text-align:center;'>Acesso bloqueado pelo Proxy.</td></tr>";
+                return;
+            }
+
             const data = await response.json();
-            // AJUSTE CRÍTICO: Agora lendo o campo 'abastecimentos' que vimos no console
             const lista = data.abastecimentos || [];
 
             if (lista.length === 0) {
-                corpo.innerHTML = "<tr><td colspan='6' style='text-align:center;'>Nenhum registro encontrado (API ativa).</td></tr>";
+                corpo.innerHTML = "<tr><td colspan='6' style='text-align:center;'>Nenhum registro encontrado.</td></tr>";
                 return;
             }
 
@@ -165,7 +178,6 @@
                 const total = item.valorTotal || 0;
                 const recolhido = item.valorRecolhido || 0;
                 const perc = total > 0 ? ((recolhido / total) * 100).toFixed(1) : "0.0";
-                
                 corpo.innerHTML += `
                     <tr>
                         <td><b>${item.cliente?.razaoSocial || item.razaoSocial || 'Registro'}</b></td>
@@ -177,7 +189,7 @@
                     </tr>`;
             });
         } catch (e) {
-            corpo.innerHTML = `<tr><td colspan='6' style='color:red; text-align:center;'>Erro de Conexão ou Proxy.</td></tr>`;
+            corpo.innerHTML = "<tr><td colspan='6' style='color:red; text-align:center;'>Erro na conexão.</td></tr>";
         }
     }
     function f(v) { return (v || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }); }
