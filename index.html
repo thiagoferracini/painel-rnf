@@ -59,7 +59,7 @@
 <body>
 
 <div class="container">
-    <div class="version-badge">v1.8.5</div>
+    <div class="version-badge">v1.8.6</div>
     <h2><i class="fa-solid fa-layer-group" style="color:var(--primary); margin-right:10px;"></i>Portal RNF <span>| Operacional</span></h2>
 
     <div class="search-section">
@@ -181,7 +181,6 @@
         corpo.innerHTML = "";
         dados.forEach(item => {
             const t = item.valorTotal || 0, r = item.valorRecolhido || 0, p = t > 0 ? ((r/t)*100).toFixed(1) : 0;
-            // Passamos o CNPJ da unidade para o abrirModal
             corpo.innerHTML += `<tr>
                 <td><b>${item.cliente.razaoSocial}</b></td>
                 <td>${f(t)}</td><td style="color:green; font-weight:600">${f(r)}</td>
@@ -222,18 +221,24 @@
         btn.classList.add('selected');
     }
 
+    // SALVAR COM CÁLCULO DE PENDENTE
     async function salvarAcaoModal() {
         if(!statusSelecionado) return alert("Selecione um status!");
         const btn = document.getElementById('btnSalvarModal');
         btn.disabled = true; btn.innerText = "GRAVANDO...";
 
+        const vTotal = unidadeAtual.total || 0;
+        const vRec = unidadeAtual.rec || 0;
+        const vPen = vTotal - vRec;
+
         const payload = {
             cnpjPosto: document.getElementById('buscaCnpj').value,
-            cnpjUnidade: unidadeAtual.cnpjUnidade, // PRUDÊNCIA: Gravando ID único da unidade
+            cnpjUnidade: unidadeAtual.cnpjUnidade,
             posto: document.getElementById('razaoShow').value,
             unidade: unidadeAtual.nome,
-            total: f(unidadeAtual.total),
-            rec: f(unidadeAtual.rec),
+            total: f(vTotal),
+            rec: f(vRec),
+            pendente: f(vPen), // Envia o valor pendente calculado
             status: statusSelecionado,
             analista: document.getElementById('analistaShow').value,
             obs: document.getElementById('modalObs').value
@@ -241,7 +246,7 @@
 
         try {
             await fetch(CONFIG.URL_SCRIPT, { method: 'POST', mode: 'no-cors', body: JSON.stringify(payload) });
-            alert("Ação enviada para a aba Historico_Acoes!");
+            alert("Sucesso! O valor pendente de " + f(vPen) + " foi registrado.");
             fecharModal();
         } catch (e) { alert("Ação enviada."); fecharModal(); }
         finally { btn.disabled = false; btn.innerText = "GRAVAR AÇÃO"; }
@@ -259,25 +264,24 @@
             const response = await fetch(`${CONFIG.URL_SCRIPT}?action=getExportData`);
             const dadosTotal = await response.json();
 
-            // FILTRO PRUDENTE: Filtra pelo CNPJ do Posto na aba histórica
             const filtrados = dadosTotal.filter(item => {
                 const cnpjPlanilha = String(item["CNPJ Posto"] || item.cnpjPosto || "").replace(/\D/g, "");
                 return cnpjPlanilha === cnpjBusca;
             });
 
             if (filtrados.length === 0) {
-                alert("Nenhum histórico gravado para este posto na aba Historico_Acoes.");
+                alert("Sem histórico na aba Historico_Acoes para este posto.");
             } else {
                 const ws = XLSX.utils.json_to_sheet(filtrados);
                 const wb = XLSX.utils.book_new();
                 XLSX.utils.book_append_sheet(wb, ws, "Historico");
-                XLSX.writeFile(wb, `RNF_Historico_${document.getElementById('razaoShow').value || 'Relatorio'}.xlsx`);
+                XLSX.writeFile(wb, `RNF_Hist_${document.getElementById('razaoShow').value || 'Relatorio'}.xlsx`);
             }
         } catch (e) { alert("Erro ao exportar."); }
         finally { btn.innerHTML = originalTxt; }
     }
 
-    function f(v) { return (v || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }); }
+    function f(v) { return (v || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
 </script>
 </body>
 </html>
