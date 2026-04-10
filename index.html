@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Portal RNF v1.3.4 - Ailog Tecnologia</title>
+    <title>Portal RNF v1.3.6 - Ailog Tecnologia</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         :root { --primary: #5cb8a1; --apple-blue: #0071e3; --bg: #f5f5f7; --alert: #d9534f; --text: #1d1d1f; }
@@ -40,7 +40,7 @@
 </div>
 
 <div class="container">
-    <div class="version-badge">v1.3.4</div>
+    <div class="version-badge">v1.3.6</div>
     <h2><i class="fa-solid fa-chart-line"></i> Portal RNF - Performance Geral</h2>
 
     <div class="search-section">
@@ -53,7 +53,7 @@
             <input type="text" id="razaoShow" readonly style="background:#f1f3f5">
         </div>
         <div class="input-group">
-            <label>Responsável</label>
+            <label>Analista Responsável</label>
             <input type="text" id="analistaShow" readonly style="background:#f1f3f5; font-weight:bold; color:var(--primary)">
         </div>
         <div class="input-group">
@@ -110,7 +110,6 @@
             dadosPlanilha = linhas.slice(1).map(l => {
                 const c = l.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
                 
-                // Normalização do CNPJ para busca estável
                 let cnpjLimpo = (c[1] || "").replace(/\D/g, '').trim();
                 if(cnpjLimpo.length > 0 && cnpjLimpo.length < 14) cnpjLimpo = cnpjLimpo.padStart(14, '0');
                 
@@ -118,7 +117,7 @@
                     id: c[0]?.replace(/"/g, '').trim(), 
                     cnpj: cnpjLimpo, 
                     razao: c[2]?.replace(/"/g, '').trim(),
-                    responsavel: c[3]?.replace(/"/g, '').trim() // Captura a 4ª coluna
+                    responsavel: c[10]?.replace(/"/g, '').trim() // Coluna K = Índice 10
                 };
             });
         } catch (e) { console.error("Erro planilha:", e); }
@@ -132,7 +131,7 @@
         if (p) {
             document.getElementById('razaoShow').value = p.razao;
             document.getElementById('idShow').value = p.id;
-            document.getElementById('analistaShow').value = p.responsavel || "Não atribuído";
+            document.getElementById('analistaShow').value = p.responsavel || "Não definido";
         } else {
             document.getElementById('razaoShow').value = "";
             document.getElementById('idShow').value = "";
@@ -147,9 +146,9 @@
         const aviso = document.getElementById('avisoProxy');
         
         aviso.style.display = 'none';
-        if(!idRaw) return alert("Localize o posto primeiro.");
+        if(!idRaw) return alert("Erro: Localize o posto pelo CNPJ primeiro.");
 
-        corpo.innerHTML = "<tr><td colspan='6' style='text-align:center;'>Buscando dados...</td></tr>";
+        corpo.innerHTML = "<tr><td colspan='6' style='text-align:center;'>Buscando dados na API...</td></tr>";
 
         const fData = (d) => { const [a, m, dia] = d.split("-"); return `${dia}/${m}/${a}`; };
         const dInicio = fData(document.getElementById('dInicio').value);
@@ -176,7 +175,7 @@
             document.getElementById('totalPerc').style.color = perc >= 92 ? 'green' : 'red';
 
             if (lista.length === 0) {
-                corpo.innerHTML = "<tr><td colspan='6' style='text-align:center;'>Nenhum detalhe encontrado.</td></tr>";
+                corpo.innerHTML = "<tr><td colspan='6' style='text-align:center;'>Nenhum detalhe encontrado para este período.</td></tr>";
                 return;
             }
 
@@ -194,7 +193,7 @@
                     <td class="${p >= 92 ? 'meta-ok' : 'meta-alert'}">${p}%</td>
                 </tr>`;
             });
-        } catch (e) { corpo.innerHTML = "<tr><td colspan='6' style='color:red; text-align:center;'>Erro de conexão.</td></tr>"; }
+        } catch (e) { corpo.innerHTML = "<tr><td colspan='6' style='color:red; text-align:center;'>Erro de conexão com o servidor.</td></tr>"; }
     }
     function f(v) { return (v || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }); }
 </script>
