@@ -59,7 +59,7 @@
 <body>
 
 <div class="container">
-    <div class="version-badge">v1.8.6</div>
+    <div class="version-badge">v1.9.0</div>
     <h2><i class="fa-solid fa-layer-group" style="color:var(--primary); margin-right:10px;"></i>Portal RNF <span>| Operacional</span></h2>
 
     <div class="search-section">
@@ -221,7 +221,7 @@
         btn.classList.add('selected');
     }
 
-    // SALVAR COM CÁLCULO DE PENDENTE
+    // SALVAR COM LOGICA DE TEXTO COPIÁVEL
     async function salvarAcaoModal() {
         if(!statusSelecionado) return alert("Selecione um status!");
         const btn = document.getElementById('btnSalvarModal');
@@ -230,23 +230,37 @@
         const vTotal = unidadeAtual.total || 0;
         const vRec = unidadeAtual.rec || 0;
         const vPen = vTotal - vRec;
+        const analista = document.getElementById('analistaShow').value;
+        const postoNome = document.getElementById('razaoShow').value;
 
         const payload = {
             cnpjPosto: document.getElementById('buscaCnpj').value,
             cnpjUnidade: unidadeAtual.cnpjUnidade,
-            posto: document.getElementById('razaoShow').value,
+            posto: postoNome,
             unidade: unidadeAtual.nome,
             total: f(vTotal),
             rec: f(vRec),
-            pendente: f(vPen), // Envia o valor pendente calculado
+            pendente: f(vPen),
             status: statusSelecionado,
-            analista: document.getElementById('analistaShow').value,
+            analista: analista,
             obs: document.getElementById('modalObs').value
         };
 
         try {
             await fetch(CONFIG.URL_SCRIPT, { method: 'POST', mode: 'no-cors', body: JSON.stringify(payload) });
-            alert("Sucesso! O valor pendente de " + f(vPen) + " foi registrado.");
+            
+            if (statusSelecionado === "Pendente") {
+                const msg = `Olá, somos da equipe RNF.\n\nIdentificamos uma pendência para o posto: ${postoNome}.\nUnidade: ${unidadeAtual.nome}\n\nValor Total: R$ ${f(vTotal)}\nValor Pendente: R$ ${f(vPen)}\n\nPor favor, nos envie as notas faltantes.\nAtenciosamente, ${analista}.`;
+                
+                if (confirm("Ação gravada! Deseja copiar a mensagem de cobrança para a área de transferência?")) {
+                    navigator.clipboard.writeText(msg).then(() => {
+                        alert("Texto copiado! Agora é só colar na sua ferramenta.");
+                    });
+                }
+            } else {
+                alert("Ação gravada com sucesso!");
+            }
+            
             fecharModal();
         } catch (e) { alert("Ação enviada."); fecharModal(); }
         finally { btn.disabled = false; btn.innerText = "GRAVAR AÇÃO"; }
@@ -270,7 +284,7 @@
             });
 
             if (filtrados.length === 0) {
-                alert("Sem histórico na aba Historico_Acoes para este posto.");
+                alert("Sem histórico na aba Historico_Acoes.");
             } else {
                 const ws = XLSX.utils.json_to_sheet(filtrados);
                 const wb = XLSX.utils.book_new();
