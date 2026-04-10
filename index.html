@@ -3,63 +3,52 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Portal RNF v1.3.6 - Ailog Tecnologia</title>
+    <title>Portal RNF v1.4.0 - Operacional</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
-        :root { --primary: #5cb8a1; --apple-blue: #0071e3; --bg: #f5f5f7; --alert: #d9534f; --text: #1d1d1f; }
+        :root { --primary: #5cb8a1; --apple-blue: #0071e3; --bg: #f5f5f7; --alert: #d9534f; --text: #1d1d1f; --warning: #f0ad4e; }
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg); margin: 0; padding: 20px; color: var(--text); }
         .container { max-width: 1250px; margin: auto; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); position: relative; }
         .version-badge { position: absolute; top: 10px; right: 20px; font-size: 10px; color: #aaa; font-weight: bold; }
         
-        /* Dashboard Cards */
-        #dashGeral { display: none; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 25px; }
-        .card { background: #f8f9fa; border: 1px solid #eee; padding: 15px; border-radius: 10px; text-align: center; }
-        .card span { display: block; font-size: 10px; color: #86868b; text-transform: uppercase; font-weight: bold; margin-bottom: 5px; }
-        .card b { font-size: 16px; color: var(--text); }
-
         .search-section { background: #eef2f7; padding: 20px; border-radius: 10px; margin-bottom: 20px; display: grid; grid-template-columns: 1fr 1.5fr 1fr 1fr; gap: 15px; align-items: flex-end; }
         .input-group { display: flex; flex-direction: column; }
         .input-group label { font-size: 11px; font-weight: bold; color: #666; margin-bottom: 5px; text-transform: uppercase; }
-        .input-group input { padding: 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; outline: none; }
+        .input-group input, .input-group textarea { padding: 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 14px; outline: none; }
+        
+        #dashGeral { display: none; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 25px; }
+        .card { background: #f8f9fa; border: 1px solid #eee; padding: 15px; border-radius: 10px; text-align: center; }
+        .card span { display: block; font-size: 10px; color: #86868b; text-transform: uppercase; font-weight: bold; }
+        .card b { font-size: 16px; }
+
+        /* Painel Operacional */
+        .ops-panel { display: none; background: #fff; border: 2px solid #5cb8a133; padding: 20px; border-radius: 12px; margin-bottom: 25px; border-left: 5px solid var(--primary); }
+        .btn-status-group { display: flex; gap: 10px; margin: 15px 0; }
+        .btn-status { border: none; padding: 10px 25px; border-radius: 20px; color: white; cursor: pointer; font-weight: bold; opacity: 0.3; transition: 0.3s; font-size: 12px; }
+        .btn-status.selected { opacity: 1; transform: scale(1.05); box-shadow: 0 4px 12px rgba(0,0,0,0.15); border: 2px solid #1d1d1f; }
         
         .action-bar { display: flex; gap: 15px; align-items: flex-end; margin-bottom: 30px; padding-top: 15px; border-top: 1px solid #eee; }
-        .btn-search { background: var(--primary); color: white; border: none; padding: 0 35px; height: 48px; border-radius: 30px; font-weight: bold; cursor: pointer; transition: 0.3s; }
-        
+        .btn-main { background: var(--primary); color: white; border: none; padding: 0 30px; height: 48px; border-radius: 30px; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 10px; }
+        .btn-excel { background: #1d6f42; color: white; border: none; padding: 0 25px; height: 48px; border-radius: 30px; font-weight: bold; cursor: pointer; }
+
         table { width: 100%; border-collapse: collapse; }
-        th { text-align: left; padding: 12px; background: #f8f9fa; font-size: 11px; color: #86868b; text-transform: uppercase; border-bottom: 2px solid #dee2e6; }
+        th { text-align: left; padding: 12px; background: #f8f9fa; font-size: 11px; color: #86868b; border-bottom: 2px solid #dee2e6; }
         td { padding: 12px; border-bottom: 1px solid #eee; font-size: 13px; }
-        .meta-ok { color: #1e7e34; font-weight: bold; }
-        .meta-alert { color: var(--alert); font-weight: bold; }
-        .alert-box { background: #fff3cd; color: #856404; padding: 15px; border-radius: 8px; border: 1px solid #ffeeba; margin-bottom: 20px; display: none; text-align: center; }
+        .loading-overlay { display: none; color: var(--apple-blue); font-weight: bold; margin-bottom: 10px; }
     </style>
 </head>
 <body>
 
-<div id="avisoProxy" class="alert-box">
-    ⚠️ <b>Acesso Bloqueado:</b> Clique em <a href="https://cors-anywhere.herokuapp.com/corsdemo" target="_blank">Ativar Acesso Temporário</a> para liberar o uso dos dados.
-</div>
-
 <div class="container">
-    <div class="version-badge">v1.3.6</div>
-    <h2><i class="fa-solid fa-chart-line"></i> Portal RNF - Performance Geral</h2>
+    <div class="version-badge">v1.4.0 - STABLE OPERATIONAL</div>
+    <h2><i class="fa-solid fa-users-gear"></i> Portal RNF - Operação Analistas</h2>
 
     <div class="search-section">
-        <div class="input-group">
-            <label>CNPJ do Posto</label>
-            <input type="text" id="buscaCnpj" placeholder="CNPJ..." oninput="filtrarBanco()">
-        </div>
-        <div class="input-group">
-            <label>Razão Social</label>
-            <input type="text" id="razaoShow" readonly style="background:#f1f3f5">
-        </div>
-        <div class="input-group">
-            <label>Analista Responsável</label>
-            <input type="text" id="analistaShow" readonly style="background:#f1f3f5; font-weight:bold; color:var(--primary)">
-        </div>
-        <div class="input-group">
-            <label>ID Estabelecimento</label>
-            <input type="text" id="idShow" readonly style="background:#f1f3f5; font-weight:bold; color:var(--apple-blue)">
-        </div>
+        <div class="input-group"><label>CNPJ do Posto</label><input type="text" id="buscaCnpj" placeholder="Digite o CNPJ..." oninput="filtrarBanco()"></div>
+        <div class="input-group"><label>Razão Social</label><input type="text" id="razaoShow" readonly style="background:#f1f3f5"></div>
+        <div class="input-group"><label>Analista Responsável (Planilha)</label><input type="text" id="analistaShow" readonly style="background:#f1f3f5; color:var(--primary); font-weight:bold;"></div>
+        <div class="input-group"><label>ID Estabelecimento</label><input type="text" id="idShow" readonly style="background:#f1f3f5; color:var(--apple-blue); font-weight:bold;"></div>
     </div>
 
     <div id="dashGeral">
@@ -69,22 +58,35 @@
         <div class="card"><span>Eficiência Total</span><b id="totalPerc">0%</b></div>
     </div>
 
-    <div class="action-bar">
-        <div class="input-group" style="flex: 1;"><label>Início</label><input type="date" id="dInicio" value="2026-03-01"></div>
-        <div class="input-group" style="flex: 1;"><label>Fim</label><input type="date" id="dFim" value="2026-03-31"></div>
-        <button class="btn-search" onclick="consultarWebrouter()"><i class="fa-solid fa-magnifying-glass"></i> PESQUISAR</button>
+    <div id="areaOperacional" class="ops-panel">
+        <label style="font-size: 11px; font-weight: bold; color: #5cb8a1;"><i class="fa-solid fa-pen-to-square"></i> REGISTRAR AÇÃO DO ANALISTA:</label>
+        <div class="btn-status-group">
+            <button class="btn-status" style="background:var(--primary)" onclick="definirStatus('Recolhido', this)">RECOLHIDO</button>
+            <button class="btn-status" style="background:var(--alert)" onclick="definirStatus('Pendente', this)">PENDENTE</button>
+            <button class="btn-status" style="background:var(--warning)" onclick="definirStatus('Aguardando Envio', this)">AGUARDANDO ENVIO</button>
+        </div>
+        <div class="input-group">
+            <label>Observações / Detalhes</label>
+            <textarea id="obsAnalista" rows="2" placeholder="Escreva aqui o resumo do contato ou motivo da pendência..."></textarea>
+        </div>
+        <div id="loadingMsg" class="loading-overlay">Salvando dados, aguarde...</div>
+        <button class="btn-main" style="margin-top: 15px;" onclick="enviarParaPlanilha()">
+            <i class="fa-solid fa-cloud-arrow-up"></i> SALVAR NO HISTÓRICO DA PLANILHA
+        </button>
     </div>
 
-    <table>
+    <div class="action-bar">
+        <div class="input-group"><label>Início</label><input type="date" id="dInicio" value="2026-03-01"></div>
+        <div class="input-group"><label>Fim</label><input type="date" id="dFim" value="2026-03-31"></div>
+        <button class="btn-main" style="background:var(--apple-blue)" onclick="consultarWebrouter()">
+            <i class="fa-solid fa-magnifying-glass"></i> PESQUISAR API
+        </button>
+        <button class="btn-excel" onclick="gerarExcel()"><i class="fa-solid fa-file-excel"></i> EXPORTAR EXCEL</button>
+    </div>
+
+    <table id="tabelaDados">
         <thead>
-            <tr>
-                <th>Posto / Cliente</th>
-                <th>Valor Total</th>
-                <th>Recolher</th>
-                <th>Pausado</th>
-                <th>Recolhido</th>
-                <th>Eficiência (%)</th>
-            </tr>
+            <tr><th>Posto / Cliente</th><th>Valor Total</th><th>Recolher</th><th>Pausado</th><th>Recolhido</th><th>Eficiência (%)</th></tr>
         </thead>
         <tbody id="corpoTabela">
             <tr><td colspan="6" style="text-align:center; padding: 40px; color:#999;">Aguardando pesquisa...</td></tr>
@@ -95,60 +97,97 @@
 <script>
     const CONFIG = {
         TOKEN_MASTER: "eyJhbGciOiJub25lIn0.eyJkYXRhRXhwaXJhY2FvIjoxNzc1MTg1MTk3Mzg1LCJpZFJldmVuZGEiOjEsImFwaVJvdXRlciI6IlRPTVRPTSIsImlzQWRtaW5TaXN0ZW1hIjp0cnVlLCJhY2Vzc2FSb3RhSW5kaXZpZHVhbFVzdWFyaW8iOmZhbHNlLCJpc1VzYUxpY2VuY2FSZXZlbmRhIjpmYWxzZSwiaWRUcmFuc3BvcnRhZG9yIjoyMDAwMzQ5LCJpZFVzciI6MzA3OSwibm9tZVVzdWFyaW8iOiJBbmEgQy5CLldvc3phayIsIm5vbWVUcmFuc3BvcnRhZG9yIjoiVFJBTlNQT1JUQURPUkEgQUlMT0ciLCJpZERvY3RvT3duZXIiOjE4NSwiaWRFbXByZXNhIjoyLCJpc0NsaWVudGVBSUxvZyI6dHJ1ZSwiaWRMaWNlbmNhUmV2ZW5kYSI6LTEsImlkR3J1cG9Vc3IiOjMxN30.", 
-        LINK_CSV: "https://docs.google.com/spreadsheets/d/e/2PACX-1vRvPcDWisDWzvafrlP118lQ1t7RIliQDE1zTdqzJVU-r6CC4vm6CkYA0CIT18NiGRNJ4UqnBeD9lXWf/pub?output=csv"
+        LINK_CSV: "https://docs.google.com/spreadsheets/d/e/2PACX-1vRvPcDWisDWzvafrlP118lQ1t7RIliQDE1zTdqzJVU-r6CC4vm6CkYA0CIT18NiGRNJ4UqnBeD9lXWf/pub?output=csv",
+        URL_SCRIPT: "https://script.google.com/macros/s/AKfycbxQ8KOKzTetUQfg7vyBLTH9u6rz78HvdJhDLLAmc7wNmnO8s7CMc9SZd8Yw05DOKaL5pQ/exec" 
     };
 
+    let statusAtual = "";
     let dadosPlanilha = [];
 
     window.onload = async () => {
         try {
             const res = await fetch(CONFIG.LINK_CSV);
-            const buffer = await res.arrayBuffer();
-            const csv = new TextDecoder('utf-8').decode(buffer);
+            const csv = await res.text();
             const linhas = csv.split(/\r?\n/).filter(l => l.trim() !== "");
-            
             dadosPlanilha = linhas.slice(1).map(l => {
                 const c = l.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
-                
-                let cnpjLimpo = (c[1] || "").replace(/\D/g, '').trim();
-                if(cnpjLimpo.length > 0 && cnpjLimpo.length < 14) cnpjLimpo = cnpjLimpo.padStart(14, '0');
-                
+                let cnpj = (c[1] || "").replace(/\D/g, '').trim();
+                if(cnpj.length > 0 && cnpj.length < 14) cnpj = cnpj.padStart(14, '0');
                 return { 
                     id: c[0]?.replace(/"/g, '').trim(), 
-                    cnpj: cnpjLimpo, 
-                    razao: c[2]?.replace(/"/g, '').trim(),
-                    responsavel: c[10]?.replace(/"/g, '').trim() // Coluna K = Índice 10
+                    cnpj: cnpj, 
+                    razao: c[2]?.replace(/"/g, '').trim(), 
+                    responsavel: c[10]?.replace(/"/g, '').trim() // Coluna K
                 };
             });
-        } catch (e) { console.error("Erro planilha:", e); }
+        } catch (e) { console.error("Erro ao carregar base de dados."); }
     };
 
     function filtrarBanco() {
         let busca = document.getElementById('buscaCnpj').value.replace(/\D/g, "");
         if(busca.length > 0 && busca.length < 14) busca = busca.padStart(14, '0');
-        
         const p = dadosPlanilha.find(item => item.cnpj === busca);
         if (p) {
             document.getElementById('razaoShow').value = p.razao;
             document.getElementById('idShow').value = p.id;
-            document.getElementById('analistaShow').value = p.responsavel || "Não definido";
-        } else {
-            document.getElementById('razaoShow').value = "";
-            document.getElementById('idShow').value = "";
-            document.getElementById('analistaShow').value = "";
+            document.getElementById('analistaShow').value = p.responsavel || "Analista não definido";
         }
+    }
+
+    function definirStatus(st, btn) {
+        statusAtual = st;
+        document.querySelectorAll('.btn-status').forEach(b => b.classList.remove('selected'));
+        btn.classList.add('selected');
+    }
+
+    async function enviarParaPlanilha() {
+        if(!statusAtual) return alert("Erro: Por favor, selecione um Status antes de salvar.");
+        
+        const loader = document.getElementById('loadingMsg');
+        loader.style.display = 'block';
+
+        const payload = {
+            cnpj: document.getElementById('buscaCnpj').value,
+            posto: document.getElementById('razaoShow').value,
+            recolhido: document.getElementById('totalRec').innerText,
+            pendente: document.getElementById('totalPen').innerText,
+            status: statusAtual,
+            analista: document.getElementById('analistaShow').value,
+            observacao: document.getElementById('obsAnalista').value
+        };
+
+        try {
+            await fetch(CONFIG.URL_SCRIPT, {
+                method: 'POST',
+                mode: 'no-cors',
+                body: JSON.stringify(payload)
+            });
+            alert("Sucesso! Registro enviado para o histórico da planilha.");
+            document.getElementById('obsAnalista').value = "";
+            statusAtual = "";
+            document.querySelectorAll('.btn-status').forEach(b => b.classList.remove('selected'));
+        } catch (e) { 
+            alert("Erro ao conectar com a planilha. Verifique a URL do Script."); 
+        } finally {
+            loader.style.display = 'none';
+        }
+    }
+
+    function gerarExcel() {
+        const table = document.getElementById("tabelaDados");
+        const wb = XLSX.utils.table_to_book(table);
+        const nomePosto = document.getElementById('razaoShow').value || "Geral";
+        XLSX.writeFile(wb, `RNF_Relatorio_${nomePosto}.xlsx`);
     }
 
     async function consultarWebrouter() {
         const idRaw = document.getElementById('idShow').value;
         const corpo = document.getElementById('corpoTabela');
         const dash = document.getElementById('dashGeral');
-        const aviso = document.getElementById('avisoProxy');
+        const areaOps = document.getElementById('areaOperacional');
         
-        aviso.style.display = 'none';
-        if(!idRaw) return alert("Erro: Localize o posto pelo CNPJ primeiro.");
-
-        corpo.innerHTML = "<tr><td colspan='6' style='text-align:center;'>Buscando dados na API...</td></tr>";
+        if(!idRaw) return alert("Busque o posto pelo CNPJ primeiro.");
+        corpo.innerHTML = "<tr><td colspan='6' style='text-align:center;'>Consultando API...</td></tr>";
 
         const fData = (d) => { const [a, m, dia] = d.split("-"); return `${dia}/${m}/${a}`; };
         const dInicio = fData(document.getElementById('dInicio').value);
@@ -161,12 +200,12 @@
                 body: JSON.stringify({ "periodo": { "dataInicio": dInicio, "dataFim": dFim }, "estabelecimento": { "id": Number(idRaw) }, "somenteMeusPostos": false })
             });
 
-            if (response.status === 403) { aviso.style.display = 'block'; return; }
-
             const data = await response.json();
             const lista = data.abastecimentos || [];
 
             dash.style.display = 'grid';
+            areaOps.style.display = 'block';
+
             document.getElementById('totalTrans').innerText = f(data.totalTransacionado);
             document.getElementById('totalRec').innerText = f(data.totalRecolhido);
             document.getElementById('totalPen').innerText = f(data.totalTransacionado - data.totalRecolhido);
@@ -174,26 +213,19 @@
             document.getElementById('totalPerc').innerText = perc + "%";
             document.getElementById('totalPerc').style.color = perc >= 92 ? 'green' : 'red';
 
-            if (lista.length === 0) {
-                corpo.innerHTML = "<tr><td colspan='6' style='text-align:center;'>Nenhum detalhe encontrado para este período.</td></tr>";
-                return;
-            }
-
             corpo.innerHTML = "";
             lista.forEach(item => {
-                const total = item.valorTotal || 0;
-                const rec = item.valorRecolhido || 0;
-                const p = total > 0 ? ((rec / total) * 100).toFixed(1) : "0.0";
+                const t = item.valorTotal || 0, r = item.valorRecolhido || 0;
+                const p = t > 0 ? ((r / t) * 100).toFixed(1) : "0.0";
                 corpo.innerHTML += `<tr>
                     <td><b>${item.cliente?.razaoSocial || "Registro"}</b></td>
-                    <td>${f(total)}</td>
-                    <td>${f(item.valorRecolher)}</td>
+                    <td>${f(t)}</td><td>${f(item.valorRecolher)}</td>
                     <td style="color:orange">${f(item.valorPausado)}</td>
-                    <td style="color:green">${f(rec)}</td>
-                    <td class="${p >= 92 ? 'meta-ok' : 'meta-alert'}">${p}%</td>
+                    <td style="color:green">${f(r)}</td>
+                    <td style="font-weight:bold; color:${p >= 92 ? 'green' : 'red'}">${p}%</td>
                 </tr>`;
             });
-        } catch (e) { corpo.innerHTML = "<tr><td colspan='6' style='color:red; text-align:center;'>Erro de conexão com o servidor.</td></tr>"; }
+        } catch (e) { corpo.innerHTML = "<tr><td colspan='6' style='color:red; text-align:center;'>Erro de conexão API.</td></tr>"; }
     }
     function f(v) { return (v || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }); }
 </script>
