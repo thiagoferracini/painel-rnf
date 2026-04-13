@@ -3,14 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Portal RNF | Operacional v3.4</title>
+    <title>Portal RNF | Operacional v4.1</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
-        :root { 
-            --primary: #5cb8a1; --apple-blue: #0071e3; --bg: #f5f5f7; --card-bg: #ffffff;
-            --alert: #d9534f; --dellys-gold: #ffcc00; --text-main: #1d1d1f; --border: #e6e6e9;
-        }
+        :root { --primary: #5cb8a1; --apple-blue: #0071e3; --bg: #f5f5f7; --card-bg: #ffffff; --alert: #d9534f; --dellys-gold: #ffcc00; --text-main: #1d1d1f; --border: #e6e6e9; }
         body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; background: var(--bg); margin: 0; padding: 20px; }
         .container { max-width: 1400px; margin: 0 auto; background: var(--card-bg); padding: 30px; border-radius: 16px; box-shadow: 0 8px 30px rgba(0,0,0,0.05); }
         .header-tools { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
@@ -24,8 +21,6 @@
         table { width: 100%; border-collapse: collapse; margin-top: 20px; }
         th { text-align: left; padding: 12px; font-size: 11px; color: #86868b; border-bottom: 2px solid var(--border); }
         td { padding: 12px; border-bottom: 1px solid var(--border); font-size: 13px; }
-        
-        /* Modal de Ação */
         .modal { display: none; position: fixed; z-index: 999; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); }
         .modal-content { background: white; margin: 10% auto; padding: 30px; border-radius: 16px; width: 450px; box-shadow: 0 20px 50px rgba(0,0,0,0.2); }
     </style>
@@ -34,7 +29,7 @@
 
 <div class="container">
     <div class="header-tools">
-        <h2>Monitoramento RNF <small style="font-size: 12px; color: #86868b;">v3.4</small></h2>
+        <h2>Monitoramento RNF <small style="font-size: 12px; color: #86868b;">v4.1</small></h2>
         <button class="btn-excel" onclick="exportarFeedbacks()">EXPORTAR XLSX</button>
     </div>
 
@@ -67,28 +62,14 @@
     <div class="modal-content">
         <h3>Registrar Ação</h3>
         <p id="infoUnidadeModal" style="font-weight: 700; color: var(--apple-blue);"></p>
-        <div class="input-group" style="margin-bottom:15px;">
-            <label>Status</label>
-            <select id="statusAcao">
-                <option value="Recolhido">Recolhido</option>
-                <option value="Pendente">Pendente</option>
-                <option value="Pausado">Pausado</option>
-                <option value="Arquivado">Arquivado</option>
-            </select>
-        </div>
-        <div class="input-group" style="margin-bottom:20px;">
-            <label>Observação</label>
-            <textarea id="obsAcao" rows="4"></textarea>
-        </div>
-        <div style="display:flex; gap:10px; justify-content:flex-end;">
-            <button onclick="fecharModal()" style="padding:10px 20px; border:none; background:#eee; border-radius:8px; cursor:pointer;">Cancelar</button>
-            <button onclick="salvarAcao()" class="btn-main">Salvar</button>
-        </div>
+        <div class="input-group" style="margin-bottom:15px;"><label>Status</label><select id="statusAcao"><option value="Recolhido">Recolhido</option><option value="Pendente">Pendente</option><option value="Pausado">Pausado</option><option value="Arquivado">Arquivado</option></select></div>
+        <div class="input-group" style="margin-bottom:20px;"><label>Observação</label><textarea id="obsAcao" rows="4"></textarea></div>
+        <div style="display:flex; gap:10px; justify-content:flex-end;"><button onclick="fecharModal()" style="padding:10px 20px; border:none; background:#eee; border-radius:8px; cursor:pointer;">Cancelar</button><button onclick="salvarAcao()" class="btn-main">Salvar</button></div>
     </div>
 </div>
 
 <script>
-    const CONFIG = { URL_SCRIPT: "https://script.google.com/macros/s/AKfycbxQ8KOKzTetUQfg7vyBLTH9u6rz78HvdJhDLLAmc7wNmnO8s7CMc9SZd8Yw05DOKaL5pQ/exec", CSV: "https://docs.google.com/spreadsheets/d/e/2PACX-1vRvPcDWisDWzvafrlP118lQ1t7RIliQDE1zTdqzJVU-r6CC4vm6CkYA0CIT18NiGRNJ4UqnBeD9lXWf/pub?output=csv", TOKEN: "eyJhbGciOiJub25lIn0.eyJkYXRhRXhwaXJhY2FvIjoxNzc1MTg1MTk3Mzg1LCJpZFJldmVuZGEiOjEsImFwaVJvdXRlciI6IlRPTVRPTSIsImlzQWRtaW5TaXN0ZW1hIjp0cnVlLCJhY2Vzc2FSb3RhSW5kaXZpZHVhbFVzdWFyaW8iOmZhbHNlLCJpc1VzYUxpY2VuY2FSZXZlbmRhIjpmYWxzZSwiaWRUcmFuc3BvcnRhZG9yIjoyMDAwMzQ5LCJpZFVzciI6MzA3OSwibm9tZVVzdWFyaW8iOiJBbmEgQy5CLldvc3phayIsIm5vbWVUcmFuc3BvcnRhZG9yIjoiVFJBTlNQT1JUQURPUkEgQUlMT0ciLCJpZERvY3RvT3duZXIiOjE4NSwiaWRFbXByZXNhIjoyLCJpc0NsaWVudGVBSUxvZyI6dHJ1ZSwiaWRMaWNlbmNhUmV2ZW5kYSI6LTEsImlkR3J1cG9Vc3IiOjMxN30." };
+    const CONFIG = { URL_SCRIPT: "<?= config.URL_SCRIPT ?>", CSV: "<?= config.CSV ?>", TOKEN: "<?= config.TOKEN ?>" };
     let baseAnalistas = [], baseDellys = [], itemSelecionado = null;
 
     window.onload = async () => {
@@ -100,7 +81,7 @@
                 return { id: c[0], cnpj: c[1]?.replace(/\D/g, '').padStart(14,'0'), razao: c[2], analista: c[10] };
             });
             baseDellys = await fetch(CONFIG.URL_SCRIPT + "?action=getDellys").then(r => r.json());
-        } catch (e) { console.error("Erro carga."); }
+        } catch (e) { console.error("Erro carga inicial."); }
     };
 
     function validarPosto() {
@@ -112,8 +93,10 @@
             document.getElementById('idShow').value = analista.id;
             document.getElementById('analistaShow').value = analista.analista;
         }
+        
+        // BUSCA BLINDADA NA ABA DELLYS
         const itemD = baseDellys.find(i => Object.values(i).some(v => v.toString().replace(/\D/g, "") === cnpj));
-        if(itemD) {
+        if(itemD && itemD["NOME_FILIAL"]) {
             badge.innerHTML = `<i class="fa-solid fa-truck"></i> ${itemD["NOME_FILIAL"].toUpperCase()}`;
             badge.style.display = 'block';
             document.getElementById('buscaCnpj').style.borderColor = "#ffcc00";
@@ -130,10 +113,7 @@
         const res = await fetch("https://cors-anywhere.herokuapp.com/https://way.webrouter.com.br/recolhaDocumentos/abastecimentos/filtro/clientes", {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'token': CONFIG.TOKEN },
-            body: JSON.stringify({ 
-                "periodo": { "dataInicio": fData(document.getElementById('dInicio').value), "dataFim": fData(document.getElementById('dFim').value) }, 
-                "estabelecimento": { "id": Number(id) }, "somenteMeusPostos": false 
-            })
+            body: JSON.stringify({ "periodo": { "dataInicio": fData(document.getElementById('dInicio').value), "dataFim": fData(document.getElementById('dFim').value) }, "estabelecimento": { "id": Number(id) }, "somenteMeusPostos": false })
         });
         const data = await res.json();
         renderizarTabela(data.abastecimentos || []);
@@ -145,13 +125,7 @@
         dados.forEach(i => {
             const pendente = (i.valorTotal || 0) - (i.valorRecolhido || 0);
             const row = document.createElement('tr');
-            row.innerHTML = `
-                <td><strong>${i.cliente.razaoSocial}</strong></td>
-                <td style="text-align:right;">${f(i.valorTotal)}</td>
-                <td style="text-align:right; color:green;">${f(i.valorRecolhido)}</td>
-                <td style="text-align:right; color:var(--alert); font-weight:700;">${f(pendente)}</td>
-                <td style="text-align:center;"><button onclick='abrirModal(${JSON.stringify(i)})' style="cursor:pointer; background:none; border:1px solid var(--primary); color:var(--primary); padding:5px 15px; border-radius:5px;">AÇÃO</button></td>
-            `;
+            row.innerHTML = `<td><strong>${i.cliente.razaoSocial}</strong></td><td style="text-align:right;">${f(i.valorTotal)}</td><td style="text-align:right; color:green;">${f(i.valorRecolhido)}</td><td style="text-align:right; color:var(--alert); font-weight:700;">${f(pendente)}</td><td style="text-align:center;"><button onclick='abrirModal(${JSON.stringify(i)})' style="cursor:pointer; background:none; border:1px solid var(--primary); color:var(--primary); padding:5px 15px; border-radius:5px;">AÇÃO</button></td>`;
             corpo.appendChild(row);
         });
     }
@@ -161,22 +135,10 @@
         document.getElementById('infoUnidadeModal').innerText = item.cliente.razaoSocial;
         document.getElementById('modalAcao').style.display = 'block';
     }
-
     function fecharModal() { document.getElementById('modalAcao').style.display = 'none'; }
 
     async function salvarAcao() {
-        const dados = {
-            cnpjPosto: document.getElementById('buscaCnpj').value,
-            posto: document.getElementById('razaoShow').value,
-            unidade: itemSelecionado.cliente.razaoSocial,
-            total: itemSelecionado.valorTotal,
-            rec: itemSelecionado.valorRecolhido,
-            pendente: (itemSelecionado.valorTotal - itemSelecionado.valorRecolhido),
-            status: document.getElementById('statusAcao').value,
-            analista: document.getElementById('analistaShow').value,
-            obs: document.getElementById('obsAcao').value
-        };
-
+        const dados = { cnpjPosto: document.getElementById('buscaCnpj').value, posto: document.getElementById('razaoShow').value, unidade: itemSelecionado.cliente.razaoSocial, total: itemSelecionado.valorTotal, rec: itemSelecionado.valorRecolhido, pendente: (itemSelecionado.valorTotal - itemSelecionado.valorRecolhido), status: document.getElementById('statusAcao').value, analista: document.getElementById('analistaShow').value, obs: document.getElementById('obsAcao').value };
         const res = await fetch(CONFIG.URL_SCRIPT, { method: 'POST', body: JSON.stringify(dados) });
         if(res.ok) { alert("Ação salva!"); fecharModal(); }
     }
@@ -188,7 +150,6 @@
         XLSX.utils.book_append_sheet(wb, ws, "Feedbacks");
         XLSX.writeFile(wb, "Feedbacks_RNF.xlsx");
     }
-
     function f(v) { return (v || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }); }
 </script>
 </body>
