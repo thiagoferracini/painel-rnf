@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Portal RNF | Operacional v3</title>
+    <title>Portal RNF | Operacional v3.1</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
@@ -15,21 +15,21 @@
         .container { max-width: 1400px; margin: 40px auto; background: var(--card-bg); padding: 30px; border-radius: 16px; box-shadow: 0 8px 30px rgba(0,0,0,0.05); }
         
         .header-tools { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
-        .search-section { background: #fdfdfd; padding: 20px; border-radius: 12px; border: 1px solid var(--border); display: grid; grid-template-columns: 1fr 1.5fr 1fr 1fr; gap: 15px; }
+        .search-section { background: #fdfdfd; padding: 20px; border-radius: 12px; border: 1px solid var(--border); display: grid; grid-template-columns: 1fr 1.5fr 1fr 0.5fr; gap: 15px; }
         
         .input-group { display: flex; flex-direction: column; }
         .input-group label { font-size: 10px; font-weight: 700; color: #86868b; margin-bottom: 6px; text-transform: uppercase; }
-        .input-group input { padding: 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px; transition: 0.3s; }
+        .input-group input { padding: 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px; outline: none; transition: 0.3s; }
         
-        /* DESTAQUE DELLYS */
-        .is-dellys { border-color: var(--dellys-gold) !important; background: #fffdf0 !important; box-shadow: 0 0 10px rgba(255, 204, 0, 0.2); }
-        .dellys-badge { display: none; background: var(--dellys-gold); color: #000; padding: 4px 10px; border-radius: 4px; font-size: 10px; font-weight: 800; margin-top: 5px; text-align: center; }
+        /* DESTAQUE DELLYS DINÂMICO */
+        .is-dellys { border-color: var(--dellys-gold) !important; background: #fffdf0 !important; border-width: 2px !important; }
+        .dellys-badge { display: none; background: var(--dellys-gold); color: #000; padding: 6px 12px; border-radius: 6px; font-size: 11px; font-weight: 800; margin-top: 8px; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
 
         .btn-main { background: var(--apple-blue); color: white; border: none; padding: 12px 25px; border-radius: 30px; cursor: pointer; font-weight: 600; }
-        .btn-excel { background: #1d6f42; color: white; border: none; padding: 12px 25px; border-radius: 30px; cursor: pointer; font-weight: 600; }
+        .btn-excel { background: #1d6f42; color: white; border: none; padding: 12px 25px; border-radius: 30px; cursor: pointer; font-weight: 600; font-size: 12px; }
 
         table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        th { text-align: left; padding: 12px; font-size: 11px; color: #86868b; border-bottom: 2px solid var(--border); }
+        th { text-align: left; padding: 12px; font-size: 11px; color: #86868b; border-bottom: 2px solid var(--border); text-transform: uppercase; }
         td { padding: 12px; border-bottom: 1px solid var(--border); font-size: 13px; }
     </style>
 </head>
@@ -37,15 +37,15 @@
 
 <div class="container">
     <div class="header-tools">
-        <h2>Monitoramento RNF</h2>
-        <button class="btn-excel" onclick="exportarFeedbacks()">EXPORTAR FEEDBACKS (XLSX)</button>
+        <div><h2 style="margin:0;">Monitoramento RNF</h2><p style="font-size:12px; color:#86868b; margin:5px 0 0;">Cruzamento de Dados & Unidades Dellys</p></div>
+        <button class="btn-excel" onclick="exportarFeedbacks()"><i class="fa-solid fa-file-excel"></i> EXPORTAR FEEDBACKS</button>
     </div>
 
     <div class="search-section">
         <div class="input-group">
             <label>CNPJ Posto</label>
-            <input type="text" id="buscaCnpj" oninput="validarPosto()" placeholder="CNPJ...">
-            <div id="badgeDellys" class="dellys-badge"><i class="fa-solid fa-truck"></i> CLIENTE DELLYS</div>
+            <input type="text" id="buscaCnpj" oninput="validarPosto()" placeholder="00.000.000/0000-00">
+            <div id="badgeDellys" class="dellys-badge"></div>
         </div>
         <div class="input-group"><label>Razão Social</label><input type="text" id="razaoShow" readonly></div>
         <div class="input-group"><label>Analista</label><input type="text" id="analistaShow" readonly></div>
@@ -61,10 +61,10 @@
     <table id="tabelaDados">
         <thead>
             <tr>
-                <th>Unidade</th>
+                <th>Unidade (Cliente)</th>
                 <th style="text-align:right;">Total</th>
                 <th style="text-align:right;">Recolhido</th>
-                <th style="text-align:right;">Pendente</th>
+                <th style="text-align:right; color:var(--alert);">Pendente</th>
                 <th style="text-align:center;">Ação</th>
             </tr>
         </thead>
@@ -73,12 +73,15 @@
 </div>
 
 <script>
-    const CONFIG = { URL_SCRIPT: "https://script.google.com/macros/s/AKfycbxQ8KOKzTetUQfg7vyBLTH9u6rz78HvdJhDLLAmc7wNmnO8s7CMc9SZd8Yw05DOKaL5pQ/exec", CSV: "https://docs.google.com/spreadsheets/d/e/2PACX-1vRvPcDWisDWzvafrlP118lQ1t7RIliQDE1zTdqzJVU-r6CC4vm6CkYA0CIT18NiGRNJ4UqnBeD9lXWf/pub?output=csv", TOKEN: "eyJhbGciOiJub25lIn0.eyJkYXRhRXhwaXJhY2FvIjoxNzc1MTg1MTk3Mzg1LCJpZFJldmVuZGEiOjEsImFwaVJvdXRlciI6IlRPTVRPTSIsImlzQWRtaW5TaXN0ZW1hIjp0cnVlLCJhY2Vzc2FSb3RhSW5kaXZpZHVhbFVzdWFyaW8iOmZhbHNlLCJpc1VzYUxpY2VuY2FSZXZlbmRhIjpmYWxzZSwiaWRUcmFuc3BvcnRhZG9yIjoyMDAwMzQ5LCJpZFVzciI6MzA3OSwibm9tZVVzdWFyaW8iOiJBbmEgQy5CLldvc3phayIsIm5vbWVUcmFuc3BvcnRhZG9yIjoiVFJBTlNQT1JUQURPUkEgQUlMT0ciLCJpZERvY3RvT3duZXIiOjE4NSwiaWRFbXByZXNhIjoyLCJpc0NsaWVudGVBSUxvZyI6dHJ1ZSwiaWRMaWNlbmNhUmV2ZW5kYSI6LTEsImlkR3J1cG9Vc3IiOjMxN30." };
-    let baseAnalistas = [], baseDellys = [], baseHistorico = [];
+    const CONFIG = { 
+        TOKEN: "eyJhbGciOiJub25lIn0.eyJkYXRhRXhwaXJhY2FvIjoxNzc1MTg1MTk3Mzg1LCJpZFJldmVuZGEiOjEsImFwaVJvdXRlciI6IlRPTVRPTSIsImlzQWRtaW5TaXN0ZW1hIjp0cnVlLCJhY2Vzc2FSb3RhSW5kaXZpZHVhbFVzdWFyaW8iOmZhbHNlLCJpc1VzYUxpY2VuY2FSZXZlbmRhIjpmYWxzZSwiaWRUcmFuc3BvcnRhZG9yIjoyMDAwMzQ5LCJpZFVzciI6MzA3OSwibm9tZVVzdWFyaW8iOiJBbmEgQy5CLldvc3phayIsIm5vbWVUcmFuc3BvcnRhZG9yIjoiVFJBTlNQT1JUQURPUkEgQUlMT0ciLCJpZERvY3RvT3duZXIiOjE4NSwiaWRFbXByZXNhIjoyLCJpc0NsaWVudGVBSUxvZyI6dHJ1ZSwiaWRMaWNlbmNhUmV2ZW5kYSI6LTEsImlkR3J1cG9Vc3IiOjMxN30.",
+        CSV: "https://docs.google.com/spreadsheets/d/e/2PACX-1vRvPcDWisDWzvafrlP118lQ1t7RIliQDE1zTdqzJVU-r6CC4vm6CkYA0CIT18NiGRNJ4UqnBeD9lXWf/pub?output=csv",
+        URL_SCRIPT: "https://script.google.com/macros/s/AKfycbxQ8KOKzTetUQfg7vyBLTH9u6rz78HvdJhDLLAmc7wNmnO8s7CMc9SZd8Yw05DOKaL5pQ/exec"
+    };
+    let baseAnalistas = [], baseDellys = [];
 
     window.onload = async () => {
         try {
-            // Carrega CSV de Analistas
             const resCsv = await fetch(CONFIG.CSV);
             const csvText = await resCsv.text();
             baseAnalistas = csvText.split(/\r?\n/).slice(1).map(l => {
@@ -86,14 +89,9 @@
                 return { id: c[0], cnpj: c[1]?.replace(/\D/g, '').padStart(14,'0'), razao: c[2], analista: c[10] };
             });
 
-            // Carrega Dados do Motor (Dellys e Histórico)
-            const [d, h] = await Promise.all([
-                fetch(CONFIG.URL_SCRIPT + "?action=getDellys").then(r => r.json()),
-                fetch(CONFIG.URL_SCRIPT + "?action=getExportData").then(r => r.json())
-            ]);
+            const d = await fetch(CONFIG.URL_SCRIPT + "?action=getDellys").then(r => r.json());
             baseDellys = d;
-            baseHistorico = h;
-        } catch (e) { console.error("Erro no carregamento inicial."); }
+        } catch (e) { console.error("Erro inicial."); }
     };
 
     function validarPosto() {
@@ -101,7 +99,7 @@
         const input = document.getElementById('buscaCnpj');
         const badge = document.getElementById('badgeDellys');
         
-        // 1. Busca na base de analistas
+        // 1. Preenche dados do Analista
         const analista = baseAnalistas.find(a => a.cnpj === cnpj);
         if(analista) {
             document.getElementById('razaoShow').value = analista.razao;
@@ -109,14 +107,19 @@
             document.getElementById('analistaShow').value = analista.analista;
         }
 
-        // 2. LOGICA DELLYS: Verifica se o CNPJ existe na base Dellys
-        const ehDellys = baseDellys.some(d => {
-            const cnpjD = Object.values(d).find(v => v.toString().replace(/\D/g, "") === cnpj);
-            return !!cnpjD;
+        // 2. BUSCA NOME DA UNIDADE NA BASE DELLYS
+        // Procura em qualquer coluna da aba Dellys onde o CNPJ bata
+        const unidadeDellys = baseDellys.find(item => {
+            return Object.values(item).some(v => v.toString().replace(/\D/g, "") === cnpj);
         });
 
-        if(ehDellys) {
+        if(unidadeDellys) {
+            // Tenta achar a coluna de nome da filial/unidade (procura por "FILIAL" ou "NOME")
+            const chaveNome = Object.keys(unidadeDellys).find(k => k.toUpperCase().includes("FILIAL") || k.toUpperCase().includes("NOME"));
+            const nomeCompleto = unidadeDellys[chaveNome] || "CLIENTE DELLYS";
+
             input.classList.add('is-dellys');
+            badge.innerHTML = `<i class="fa-solid fa-truck"></i> ${nomeCompleto.toUpperCase()}`;
             badge.style.display = 'block';
         } else {
             input.classList.remove('is-dellys');
@@ -128,16 +131,48 @@
         try {
             const res = await fetch(CONFIG.URL_SCRIPT + "?action=getExportData");
             const dados = await res.json();
-            if(!dados.length) return alert("Nenhum feedback encontrado.");
-            
+            if(!dados.length) return alert("Sem dados para exportar.");
             const ws = XLSX.utils.json_to_sheet(dados);
             const wb = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(wb, ws, "Feedbacks");
-            XLSX.writeFile(wb, "Relatorio_Feedbacks_RNF.xlsx");
-        } catch (e) { alert("Erro ao exportar Excel."); }
+            XLSX.writeFile(wb, "Feedbacks_RNF.xlsx");
+        } catch (e) { alert("Erro exportação."); }
     }
 
-    // Funções de consulta e renderização permanecem fiéis às de 10/04
+    // Mantendo lógica de consulta estável
+    async function consultarWebrouter() {
+        const id = document.getElementById('idShow').value;
+        if(!id) return;
+        const fData = (d) => d.split("-").reverse().join("/");
+        try {
+            const res = await fetch("https://cors-anywhere.herokuapp.com/https://way.webrouter.com.br/recolhaDocumentos/abastecimentos/filtro/clientes", {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'token': CONFIG.TOKEN },
+                body: JSON.stringify({ 
+                    "periodo": { "dataInicio": fData(document.getElementById('dInicio').value), "dataFim": fData(document.getElementById('dFim').value) }, 
+                    "estabelecimento": { "id": Number(id) }, "somenteMeusPostos": false 
+                })
+            });
+            const data = await res.json();
+            renderizarTabela(data.abastecimentos || []);
+        } catch (e) { console.error("Erro API"); }
+    }
+
+    function renderizarTabela(dados) {
+        const corpo = document.getElementById('corpoTabela');
+        corpo.innerHTML = "";
+        dados.forEach(i => {
+            const pendente = (i.valorTotal || 0) - (i.valorRecolhido || 0);
+            corpo.innerHTML += `<tr>
+                <td><strong>${i.cliente.razaoSocial}</strong></td>
+                <td style="text-align:right;">${f(i.valorTotal)}</td>
+                <td style="text-align:right; color:green;">${f(i.valorRecolhido)}</td>
+                <td style="text-align:right; color:var(--alert); font-weight:700;">${f(pendente)}</td>
+                <td style="text-align:center;"><button style="cursor:pointer; background:none; border:1px solid var(--primary); color:var(--primary); padding:5px 15px; border-radius:5px;">AÇÃO</button></td>
+            </tr>`;
+        });
+    }
+
     function f(v) { return (v || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }); }
 </script>
 </body>
