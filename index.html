@@ -10,6 +10,7 @@
         :root { 
             --primary: #5cb8a1; --apple-blue: #0071e3; --bg: #f5f5f7; --card-bg: #ffffff;
             --alert: #d9534f; --text-main: #1d1d1f; --text-sub: #86868b; --border: #e6e6e9;
+            --pause: #f0ad4e; --archive: #6c757d;
         }
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg); margin: 0; color: var(--text-main); -webkit-font-smoothing: antialiased; }
         
@@ -27,7 +28,7 @@
 
         .portal-wrapper { display: none; padding: 20px; }
         .btn-voltar { position: absolute; top: 25px; left: 25px; background: #eaeaec; border: none; padding: 10px 20px; border-radius: 30px; cursor: pointer; font-weight: 700; z-index: 100; font-size: 11px; }
-        .container { max-width: 1350px; margin: 40px auto auto; background: var(--card-bg); padding: 30px; border-radius: 16px; box-shadow: 0 8px 30px rgba(0,0,0,0.05); position: relative; }
+        .container { max-width: 1400px; margin: 40px auto auto; background: var(--card-bg); padding: 30px; border-radius: 16px; box-shadow: 0 8px 30px rgba(0,0,0,0.05); position: relative; }
         .version-badge { position: absolute; top: 15px; right: 25px; font-size: 11px; color: #bbb; font-weight: bold; }
         
         .search-section { background: #fdfdfd; padding: 20px; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 25px; display: grid; grid-template-columns: 1fr 1.5fr 1fr 1fr; gap: 15px; }
@@ -40,9 +41,9 @@
         .card-value { font-size: 20px; font-weight: 700; }
 
         table { width: 100%; border-collapse: collapse; border-radius: 10px; overflow: hidden; margin-top: 10px; }
-        th { text-align: left; padding: 12px 15px; background: #fdfdfd; font-size: 11px; color: var(--text-sub); border-bottom: 2px solid var(--border); cursor: pointer; transition: background 0.2s; }
+        th { text-align: left; padding: 12px 10px; background: #fdfdfd; font-size: 11px; color: var(--text-sub); border-bottom: 2px solid var(--border); cursor: pointer; white-space: nowrap; }
         th:hover { background: #f0f0f2; }
-        td { padding: 12px 15px; border-bottom: 1px solid var(--border); font-size: 13px; }
+        td { padding: 12px 10px; border-bottom: 1px solid var(--border); font-size: 13px; }
 
         .btn-main { background: var(--apple-blue); color: white; border: none; padding: 12px 25px; border-radius: 30px; cursor: pointer; font-weight: 600; display: flex; align-items: center; gap: 8px; }
         
@@ -52,7 +53,7 @@
 
         .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); backdrop-filter: blur(4px); }
         .modal-content { background: white; margin: 8% auto; border-radius: 16px; width: 480px; box-shadow: 0 20px 40px rgba(0,0,0,0.2); overflow: hidden; }
-        .btn-st { border: none; padding: 12px; border-radius: 10px; color: white; cursor: pointer; font-weight: 700; opacity: 0.4; flex: 1; transition: 0.2s; }
+        .btn-st { border: none; padding: 12px; border-radius: 10px; color: white; cursor: pointer; font-weight: 700; opacity: 0.4; flex: 1; transition: 0.2s; font-size: 11px; }
         .btn-st.selected { opacity: 1; transform: scale(1.05); }
     </style>
 </head>
@@ -67,12 +68,12 @@
         <div class="hub-card" onclick="irPara('todos')">
             <i class="fa-solid fa-layer-group"></i>
             <h3>Todos os Clientes</h3>
-            <p>Consulta manual v1.9.2 integrada.</p>
+            <p>Consulta manual integrada.</p>
         </div>
         <div class="hub-card" onclick="irPara('dellys')">
             <i class="fa-solid fa-truck-fast" style="color: var(--primary);"></i>
             <h3>Projeto Dellys</h3>
-            <p>Atalhos inteligentes por postos.</p>
+            <p>Atalhos por unidades.</p>
         </div>
     </div>
 </div>
@@ -80,8 +81,8 @@
 <div id="portalTodos" class="portal-wrapper">
     <button class="btn-voltar" onclick="voltar()"><i class="fa-solid fa-chevron-left"></i> VOLTAR</button>
     <div class="container">
-        <div class="version-badge">v2.0.4 Ordenável</div>
-        <h2><i class="fa-solid fa-layer-group" style="color:var(--primary); margin-right:10px;"></i>Portal RNF <span>| Geral</span></h2>
+        <div class="version-badge">v2.0.6 Status Completo</div>
+        <h2>Portal RNF <span>| Monitoramento</span></h2>
         
         <div class="search-section">
             <div class="input-group"><label>CNPJ Posto</label><input type="text" id="buscaCnpj" placeholder="00.000.000/0000-00" oninput="filtrarBanco()"></div>
@@ -93,7 +94,7 @@
         <div id="dashGeral">
             <div class="card"><div style="font-size:10px; font-weight:700; color:var(--text-sub);">TOTAL</div><div class="card-value" id="totalTrans">R$ 0,00</div></div>
             <div class="card"><div style="font-size:10px; font-weight:700; color:var(--text-sub);">RECOLHIDO</div><div class="card-value" id="totalRec" style="color:green;">R$ 0,00</div></div>
-            <div class="card"><div style="font-size:10px; font-weight:700; color:var(--text-sub);">PENDENTE</div><div class="card-value" id="totalPen" style="color:var(--alert);">R$ 0,00</div></div>
+            <div class="card"><div style="font-size:10px; font-weight:700; color:var(--text-sub);">PENDENTE GERAL</div><div class="card-value" id="totalPen" style="color:var(--alert);">R$ 0,00</div></div>
             <div class="card"><div style="font-size:10px; font-weight:700; color:var(--text-sub);">EFICIÊNCIA</div><div class="card-value" id="totalPerc">0,00%</div></div>
         </div>
 
@@ -108,10 +109,11 @@
             <thead>
                 <tr>
                     <th onclick="ordenarTabela('cliente.razaoSocial')">Unidade <i class="fa-solid fa-sort"></i></th>
-                    <th style="text-align:center;" onclick="ordenarTabela('quantidadeAbastecimentos')">Qtd <i class="fa-solid fa-sort"></i></th>
-                    <th style="text-align:right;" onclick="ordenarTabela('quantidadeLitros')">Litros <i class="fa-solid fa-sort"></i></th>
                     <th style="text-align:right;" onclick="ordenarTabela('valorTotal')">Total <i class="fa-solid fa-sort"></i></th>
                     <th style="text-align:right;" onclick="ordenarTabela('valorRecolhido')">Rec <i class="fa-solid fa-sort"></i></th>
+                    <th style="text-align:right; color:var(--alert);" onclick="ordenarTabela('valorPendente')">Pendente <i class="fa-solid fa-sort"></i></th>
+                    <th style="text-align:right; color:var(--pause);" onclick="ordenarTabela('valorPausado')">Pausado <i class="fa-solid fa-sort"></i></th>
+                    <th style="text-align:right; color:var(--archive);" onclick="ordenarTabela('valorArquivado')">Arquivado <i class="fa-solid fa-sort"></i></th>
                     <th style="text-align:center;" onclick="ordenarTabela('percentual')">% <i class="fa-solid fa-sort"></i></th>
                     <th style="text-align:center;">Ação</th>
                 </tr>
@@ -135,9 +137,11 @@
     <div class="modal-content">
         <div style="padding:20px; border-bottom:1px solid #eee;"><h3 id="modalTitulo" style="margin:0;">Ação</h3><span id="modalValores" style="font-size:12px; color:#888;"></span></div>
         <div style="padding:20px;">
-            <div style="display:flex; gap:10px; margin-bottom:20px;">
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-bottom:20px;">
                 <button class="btn-st" id="stRec" style="background:var(--primary);" onclick="selectStatus('Recolhido', this)">RECOLHIDO</button>
                 <button class="btn-st" id="stPen" style="background:var(--alert);" onclick="selectStatus('Pendente', this)">PENDENTE</button>
+                <button class="btn-st" id="stPau" style="background:var(--pause);" onclick="selectStatus('Pausado', this)">PAUSADO</button>
+                <button class="btn-st" id="stArq" style="background:var(--archive);" onclick="selectStatus('Arquivado', this)">ARQUIVADO</button>
             </div>
             <textarea id="modalObs" rows="4" style="width:100%; border-radius:8px; padding:10px; box-sizing:border-box; border:1px solid var(--border);" placeholder="Observações..."></textarea>
         </div>
@@ -172,11 +176,12 @@
                 const c = l.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
                 return { id: c[0]?.replace(/"/g, ''), cnpj: c[1]?.replace(/\D/g, '').padStart(14,'0'), razao: c[2]?.replace(/"/g, ''), analista: c[10]?.replace(/"/g, '') };
             });
-        } catch (e) { console.error("CSV erro"); }
+        } catch (e) { console.error("Erro CSV"); }
     };
 
     async function carregarDellys() {
         const grid = document.getElementById('gridDellys');
+        grid.innerHTML = "Carregando...";
         try {
             const res = await fetch(CONFIG.URL_SCRIPT + "?action=getDellys");
             dadosDellys = await res.json();
@@ -185,7 +190,7 @@
             filiais.forEach(f => {
                 grid.innerHTML += `<div class="filial-card" onclick="abrirPostosFilial('${f}')"><h3>${f}</h3><p>${dadosDellys.filter(d => d.NOME_FILIAL === f).length} postos</p></div>`;
             });
-        } catch (e) { grid.innerHTML = "Erro Dellys."; }
+        } catch (e) { grid.innerHTML = "Erro ao carregar Dellys."; }
     }
 
     function abrirPostosFilial(nomeFilial) {
@@ -229,9 +234,15 @@
                 body: JSON.stringify({ "periodo": { "dataInicio": fData(document.getElementById('dInicio').value), "dataFim": fData(document.getElementById('dFim').value) }, "estabelecimento": { "id": Number(id) }, "somenteMeusPostos": false })
             });
             const data = await res.json();
+            
+            // Lógica para injetar valores simulados (que virão da ação do analista)
             listaAtual = (data.abastecimentos || []).map(item => {
-                // Injetar percentual numérico para facilitar ordenação
-                item.percentual = item.valorTotal > 0 ? (item.valorRecolhido / item.valorTotal * 100) : 0;
+                const total = item.valorTotal || 0;
+                const rec = item.valorRecolhido || 0;
+                item.valorPendente = total - rec; // Padrão é tudo pendente se não rec
+                item.valorPausado = 0;   // Inicia zerado até o analista atuar
+                item.valorArquivado = 0; // Inicia zerado até o analista atuar
+                item.percentual = total > 0 ? (rec / total * 100) : 0;
                 return item;
             });
             
@@ -244,10 +255,9 @@
             document.getElementById('totalPerc').innerText = perc.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + "%";
             
             renderizarTabela(listaAtual);
-        } catch (e) { alert("Erro API."); }
+        } catch (e) { alert("Erro na API Webrouter."); }
     }
 
-    // NOVA FUNÇÃO DE ORDENAÇÃO
     function ordenarTabela(coluna) {
         ordemAsc = !ordemAsc;
         listaAtual.sort((a, b) => {
@@ -264,16 +274,16 @@
         corpo.innerHTML = "";
         dados.forEach(item => {
             const t = item.valorTotal || 0, r = item.valorRecolhido || 0;
+            const pend = item.valorPendente || 0, paus = item.valorPausado || 0, arq = item.valorArquivado || 0;
             const p = item.percentual.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-            const qtd = item.quantidadeAbastecimentos || 0;
-            const litros = (item.quantidadeLitros || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
             corpo.innerHTML += `<tr>
                 <td><div style="font-weight:700;">${item.cliente.razaoSocial}</div><div style="font-size:10px; color:#888;">${item.cliente.cnpj}</div></td>
-                <td style="text-align:center;">${qtd}</td>
-                <td style="text-align:right;">${litros} L</td>
                 <td style="text-align:right;">${f(t)}</td>
                 <td style="text-align:right; color:green;">${f(r)}</td>
+                <td style="text-align:right; font-weight:700;">${f(pend)}</td>
+                <td style="text-align:right; color:var(--pause);">${f(paus)}</td>
+                <td style="text-align:right; color:var(--archive);">${f(arq)}</td>
                 <td style="text-align:center; font-weight:700;">${p}%</td>
                 <td style="text-align:center;"><button onclick="abrirModal('${item.cliente.razaoSocial}', ${t}, ${r}, '${item.cliente.cnpj}')" style="cursor:pointer; border:1px solid var(--primary); background:none; color:var(--primary); padding:5px 12px; border-radius:6px;">AÇÃO</button></td>
             </tr>`;
@@ -289,7 +299,9 @@
         document.querySelectorAll('.btn-st').forEach(b => b.classList.remove('selected'));
         document.getElementById('modalAcao').style.display = 'block';
     }
+
     function fecharModal() { document.getElementById('modalAcao').style.display = 'none'; }
+    
     function selectStatus(st, btn) {
         statusSelecionado = st;
         document.querySelectorAll('.btn-st').forEach(b => b.classList.remove('selected'));
@@ -302,6 +314,7 @@
         btn.disabled = true; btn.innerText = "GRAVANDO...";
         const vPen = unidadeAtual.total - unidadeAtual.rec;
         const analista = document.getElementById('analistaShow').value;
+        
         const payload = {
             cnpjPosto: document.getElementById('buscaCnpj').value,
             cnpjUnidade: unidadeAtual.cnpjUn,
@@ -314,15 +327,12 @@
             analista: analista,
             obs: document.getElementById('modalObs').value
         };
+
         try {
             await fetch(CONFIG.URL_SCRIPT, { method: 'POST', mode: 'no-cors', body: JSON.stringify(payload) });
-            if(statusSelecionado === 'Pendente') {
-                const msg = `Olá, sou ${analista}, equipe RNF. Pendência para: ${payload.posto}. Valor Pendente: ${f(vPen)} para ${unidadeAtual.nome} (CNPJ ${unidadeAtual.cnpjUn}). Favor enviar notas.`;
-                navigator.clipboard.writeText(msg);
-                alert("Gravado e Mensagem Copiada!");
-            } else alert("Gravado!");
+            alert("Status " + statusSelecionado + " gravado com sucesso!");
             fecharModal();
-        } catch (e) { alert("Ação enviada."); fecharModal(); }
+        } catch (e) { alert("Ação enviada para processamento."); fecharModal(); }
         finally { btn.disabled = false; btn.innerText = "GRAVAR"; }
     }
 
@@ -334,8 +344,8 @@
             const ws = XLSX.utils.json_to_sheet(dados);
             const wb = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(wb, ws, "Historico");
-            XLSX.writeFile(wb, "RNF_Historico.xlsx");
-        } catch (e) { alert("Erro Excel."); }
+            XLSX.writeFile(wb, "RNF_Monitoramento.xlsx");
+        } catch (e) { alert("Erro ao exportar."); }
         finally { btn.innerText = "EXCEL"; }
     }
 
