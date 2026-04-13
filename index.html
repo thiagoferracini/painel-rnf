@@ -3,41 +3,33 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Portal RNF | v4.3</title>
+    <title>Portal RNF | v4.4</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
         :root { --primary: #5cb8a1; --apple-blue: #0071e3; --bg: #f5f5f7; --card-bg: #ffffff; --alert: #d9534f; --dellys-gold: #ffcc00; --text-main: #1d1d1f; --border: #e6e6e9; }
         body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; background: var(--bg); margin: 0; display: flex; height: 100vh; overflow: hidden; color: var(--text-main); }
-        
         .sidebar { width: 80px; background: #1d1d1f; display: flex; flex-direction: column; align-items: center; padding-top: 30px; gap: 20px; transition: 0.3s; z-index: 100; }
         .sidebar:hover { width: 200px; }
         .nav-item { color: #86868b; cursor: pointer; display: flex; align-items: center; gap: 15px; width: 100%; padding: 15px 25px; transition: 0.2s; text-decoration: none; }
         .nav-item:hover, .nav-item.active { color: white; background: #323232; }
         .nav-item span { display: none; font-weight: 600; font-size: 14px; white-space: nowrap; }
         .sidebar:hover .nav-item span { display: block; }
-
         .main-content { flex: 1; padding: 30px; overflow-y: auto; position: relative; }
         .container { max-width: 1300px; margin: 0 auto; background: var(--card-bg); padding: 30px; border-radius: 16px; box-shadow: 0 8px 30px rgba(0,0,0,0.05); }
         .page { display: none; }
         .page.active { display: block; }
-
         .search-section { background: #fdfdfd; padding: 20px; border-radius: 12px; border: 1px solid var(--border); display: grid; grid-template-columns: 1fr 1.5fr 1fr 0.5fr; gap: 15px; margin-bottom: 20px; }
         .input-group { display: flex; flex-direction: column; }
         .input-group label { font-size: 10px; font-weight: 700; color: #86868b; margin-bottom: 6px; text-transform: uppercase; }
         .input-group input, select, textarea { padding: 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px; outline: none; transition: 0.2s; }
-        .input-group input:focus { border-color: var(--apple-blue); }
-        
         .dellys-badge { display: none; background: var(--dellys-gold); color: #000; padding: 8px; border-radius: 8px; font-size: 11px; font-weight: 800; margin-top: 10px; text-align: center; }
         .btn-main { background: var(--apple-blue); color: white; border: none; padding: 12px 25px; border-radius: 30px; cursor: pointer; font-weight: 600; transition: 0.2s; }
-        .btn-main:hover { opacity: 0.9; transform: translateY(-1px); }
-        
         table { width: 100%; border-collapse: collapse; margin-top: 20px; }
         th { text-align: left; padding: 12px; font-size: 11px; color: #86868b; border-bottom: 2px solid var(--border); text-transform: uppercase; }
         td { padding: 12px; border-bottom: 1px solid var(--border); font-size: 13px; }
-
         .modal { display: none; position: fixed; z-index: 999; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); }
-        .modal-content { background: white; margin: 10% auto; padding: 30px; border-radius: 16px; width: 450px; box-shadow: 0 20px 50px rgba(0,0,0,0.2); }
+        .modal-content { background: white; margin: 10% auto; padding: 30px; border-radius: 16px; width: 450px; }
     </style>
 </head>
 <body>
@@ -51,10 +43,9 @@
     <div id="operacao" class="page active">
         <div class="container">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
-                <h2 style="margin:0;">Painel de Recolha <small style="font-size:12px; color:var(--primary);">v4.3</small></h2>
+                <h2 style="margin:0;">Painel de Recolha <small style="font-size:12px; color:var(--primary);">v4.4</small></h2>
                 <button onclick="exportarFeedbacks()" style="padding:10px 20px; background:#1d6f42; color:white; border:none; border-radius:20px; cursor:pointer; font-size:12px; font-weight:600;"><i class="fa-solid fa-file-excel"></i> EXPORTAR XLSX</button>
             </div>
-
             <div class="search-section">
                 <div class="input-group">
                     <label>Busca CNPJ Posto</label>
@@ -65,23 +56,13 @@
                 <div class="input-group"><label>Analista Responsável</label><input type="text" id="analistaShow" readonly></div>
                 <div class="input-group"><label>ID Webrouter</label><input type="text" id="idShow" readonly></div>
             </div>
-
             <div style="display:flex; gap:15px; align-items:flex-end; margin-bottom:20px;">
                 <div class="input-group"><label>Data Início</label><input type="date" id="dInicio" value="2026-04-01"></div>
                 <div class="input-group"><label>Data Fim</label><input type="date" id="dFim" value="2026-04-30"></div>
                 <button class="btn-main" onclick="consultarWebrouter()">CONSULTAR WEBROUTER</button>
             </div>
-
             <table>
-                <thead>
-                    <tr>
-                        <th>Unidade do Posto</th>
-                        <th style="text-align:right;">Valor Total</th>
-                        <th style="text-align:right;">Recolhido</th>
-                        <th style="text-align:right;">Pendente</th>
-                        <th style="text-align:center;">Ação</th>
-                    </tr>
-                </thead>
+                <thead><tr><th>Unidade do Posto</th><th style="text-align:right;">Valor Total</th><th style="text-align:right;">Recolhido</th><th style="text-align:right;">Pendente</th><th style="text-align:center;">Ação</th></tr></thead>
                 <tbody id="corpoTabela"></tbody>
             </table>
         </div>
@@ -90,7 +71,6 @@
     <div id="config" class="page">
         <div class="container">
             <h2>Ajustes do Sistema (ADM)</h2>
-            <p style="color:#86868b; font-size:13px; margin-bottom:30px;">Gerencie os links de integração sem mexer no código.</p>
             <div style="display:flex; flex-direction:column; gap:25px; max-width:800px;">
                 <div class="input-group"><label>URL da Implantação (App Script /exec)</label><input type="text" id="confUrl" value="<?= config.URL_SCRIPT || '' ?>"></div>
                 <div class="input-group"><label>Link do CSV (Exportar da Planilha Base)</label><input type="text" id="confCsv" value="<?= config.CSV || '' ?>"></div>
@@ -101,45 +81,28 @@
     </div>
 </div>
 
-<div id="modalAcao" class="modal">
-    <div class="modal-content">
-        <h3>Registrar Feedback</h3>
-        <p id="infoUnidadeModal" style="font-weight: 700; color: var(--apple-blue);"></p>
-        <div class="input-group" style="margin-bottom:15px;">
-            <label>Status da Recolha</label>
-            <select id="statusAcao">
-                <option value="Recolhido">Recolhido</option>
-                <option value="Pendente">Pendente</option>
-                <option value="Pausado">Pausado</option>
-                <option value="Arquivado">Arquivado</option>
-            </select>
-        </div>
-        <div class="input-group" style="margin-bottom:20px;">
-            <label>Observações Adicionais</label>
-            <textarea id="obsAcao" rows="4" placeholder="Descreva o motivo ou próxima ação..."></textarea>
-        </div>
-        <div style="display:flex; gap:10px; justify-content:flex-end;">
-            <button onclick="fecharModal()" style="padding:10px 20px; border:none; background:#eee; border-radius:8px; cursor:pointer;">Cancelar</button>
-            <button onclick="salvarAcao()" class="btn-main">Gravar Ação</button>
-        </div>
-    </div>
-</div>
+<div id="modalAcao" class="modal"><div class="modal-content"><h3>Registrar Feedback</h3><p id="infoUnidadeModal" style="font-weight:700; color:var(--apple-blue);"></p><div class="input-group" style="margin-bottom:15px;"><label>Status</label><select id="statusAcao"><option value="Recolhido">Recolhido</option><option value="Pendente">Pendente</option><option value="Pausado">Pausado</option><option value="Arquivado">Arquivado</option></select></div><div class="input-group" style="margin-bottom:20px;"><label>Obs</label><textarea id="obsAcao" rows="4"></textarea></div><div style="display:flex; gap:10px; justify-content:flex-end;"><button onclick="fecharModal()" style="padding:10px 20px; border:none; background:#eee; cursor:pointer;">Cancelar</button><button onclick="salvarAcao()" class="btn-main">Gravar</button></div></div></div>
 
 <script>
+    // 1. VARIÁVEIS GLOBAIS
     const CONFIG = {
         URL_SCRIPT: "<?= config.URL_SCRIPT || '' ?>",
         CSV: "<?= config.CSV || '' ?>",
         TOKEN: "<?= config.TOKEN || '' ?>"
     };
-    
     let baseAnalistas = [], baseDellys = [], itemSelecionado = null;
 
-    // Inicialização
+    // 2. FUNÇÕES DE NAVEGAÇÃO (Resolvendo o erro de switchPage)
+    function switchPage(pageId, btn) {
+        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+        document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+        document.getElementById(pageId).classList.add('active');
+        btn.classList.add('active');
+    }
+
+    // 3. CARREGAMENTO INICIAL
     window.onload = async () => {
-        if (!CONFIG.CSV || !CONFIG.URL_SCRIPT) {
-            console.warn("Configurações não encontradas. Use a aba de Ajustes ADM.");
-            return;
-        }
+        if (!CONFIG.CSV || !CONFIG.URL_SCRIPT) return;
         try {
             const resCsv = await fetch(CONFIG.CSV);
             const csvText = await resCsv.text();
@@ -148,63 +111,33 @@
                 return { id: c[0], cnpj: c[1]?.replace(/\D/g, '').padStart(14,'0'), razao: c[2], analista: c[10] };
             });
             baseDellys = await fetch(CONFIG.URL_SCRIPT + "?action=getDellys").then(r => r.json());
-        } catch (e) { console.error("Erro no carregamento inicial."); }
+        } catch (e) { console.error("Erro carga inicial."); }
     };
 
-    function switchPage(pageId, btn) {
-        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-        document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
-        document.getElementById(pageId).classList.add('active');
-        btn.classList.add('active');
-    }
-
-    // Lógica ADM
-    function salvarConfiguracoesADM() {
-        if (typeof google === 'undefined' || !google.script) {
-            alert("ERRO: Acesso negado. Utilize o link oficial /exec.");
-            return;
-        }
-        const btn = event.target;
-        btn.innerText = "GRAVANDO...";
-        const novas = {
-            URL_SCRIPT: document.getElementById('confUrl').value,
-            CSV: document.getElementById('confCsv').value,
-            TOKEN: document.getElementById('confToken').value
-        };
-        google.script.run.withSuccessHandler((msg) => {
-            alert(msg);
-            location.reload();
-        }).salvarConfiguracoesPlanilha(novas);
-    }
-
-    // Busca e Validação
+    // 4. LÓGICAS OPERACIONAIS (Validação, API e Tabela)
     function validarPosto() {
         let cnpj = document.getElementById('buscaCnpj').value.replace(/\D/g, "").padStart(14,'0');
         const badge = document.getElementById('badgeDellys');
         const analista = baseAnalistas.find(a => a.cnpj === cnpj);
-        
         if(analista) {
             document.getElementById('razaoShow').value = analista.razao;
             document.getElementById('idShow').value = analista.id;
             document.getElementById('analistaShow').value = analista.analista;
         }
-
-        // Lógica Dellys (Busca na coluna NOME_FILIAL)
         const itemD = baseDellys.find(i => Object.values(i).some(v => v.toString().replace(/\D/g, "") === cnpj));
         if(itemD && itemD["NOME_FILIAL"]) {
             badge.innerHTML = `<i class="fa-solid fa-truck"></i> ${itemD["NOME_FILIAL"].toUpperCase()}`;
             badge.style.display = 'block';
-            document.getElementById('buscaCnpj').style.borderColor = var(--dellys-gold);
+            document.getElementById('buscaCnpj').style.borderColor = "#ffcc00";
         } else {
             badge.style.display = 'none';
-            document.getElementById('buscaCnpj').style.borderColor = "var(--border)";
+            document.getElementById('buscaCnpj').style.borderColor = "#e6e6e9";
         }
     }
 
-    // Consulta API
     async function consultarWebrouter() {
         const id = document.getElementById('idShow').value;
-        if(!id) return alert("Selecione um posto válido.");
+        if(!id) return;
         const fData = (d) => d.split("-").reverse().join("/");
         const res = await fetch("https://cors-anywhere.herokuapp.com/https://way.webrouter.com.br/recolhaDocumentos/abastecimentos/filtro/clientes", {
             method: 'POST',
@@ -221,51 +154,36 @@
         dados.forEach(i => {
             const pend = (i.valorTotal || 0) - (i.valorRecolhido || 0);
             const row = document.createElement('tr');
-            row.innerHTML = `
-                <td><strong>${i.cliente.razaoSocial}</strong></td>
-                <td style="text-align:right;">${f(i.valorTotal)}</td>
-                <td style="text-align:right; color:green;">${f(i.valorRecolhido)}</td>
-                <td style="text-align:right; color:var(--alert); font-weight:700;">${f(pend)}</td>
-                <td style="text-align:center;"><button onclick='abrirModal(${JSON.stringify(i)})' style="cursor:pointer; background:none; border:1px solid var(--primary); color:var(--primary); padding:5px 15px; border-radius:5px;">AÇÃO</button></td>
-            `;
+            row.innerHTML = `<td><strong>${i.cliente.razaoSocial}</strong></td><td style="text-align:right;">${f(i.valorTotal)}</td><td style="text-align:right; color:green;">${f(i.valorRecolhido)}</td><td style="text-align:right; color:var(--alert); font-weight:700;">${f(pend)}</td><td style="text-align:center;"><button onclick='abrirModal(${JSON.stringify(i)})' style="cursor:pointer; background:none; border:1px solid var(--primary); color:var(--primary); padding:5px 15px; border-radius:5px;">AÇÃO</button></td>`;
             corpo.appendChild(row);
         });
     }
 
-    // Modais e Gravação
-    function abrirModal(item) { 
-        itemSelecionado = item; 
-        document.getElementById('infoUnidadeModal').innerText = item.cliente.razaoSocial; 
-        document.getElementById('modalAcao').style.display = 'block'; 
-    }
+    // 5. MODAIS E SALVAMENTO
+    function abrirModal(item) { itemSelecionado = item; document.getElementById('infoUnidadeModal').innerText = item.cliente.razaoSocial; document.getElementById('modalAcao').style.display = 'block'; }
     function fecharModal() { document.getElementById('modalAcao').style.display = 'none'; }
-
     async function salvarAcao() {
-        const dados = { 
-            cnpjPosto: document.getElementById('buscaCnpj').value, 
-            posto: document.getElementById('razaoShow').value, 
-            unidade: itemSelecionado.cliente.razaoSocial, 
-            total: itemSelecionado.valorTotal, 
-            rec: itemSelecionado.valorRecolhido, 
-            pendente: (itemSelecionado.valorTotal - itemSelecionado.valorRecolhido), 
-            status: document.getElementById('statusAcao').value, 
-            analista: document.getElementById('analistaShow').value, 
-            obs: document.getElementById('obsAcao').value 
-        };
+        const dados = { cnpjPosto: document.getElementById('buscaCnpj').value, posto: document.getElementById('razaoShow').value, unidade: itemSelecionado.cliente.razaoSocial, total: itemSelecionado.valorTotal, rec: itemSelecionado.valorRecolhido, pendente: (itemSelecionado.valorTotal - itemSelecionado.valorRecolhido), status: document.getElementById('statusAcao').value, analista: document.getElementById('analistaShow').value, obs: document.getElementById('obsAcao').value };
         await fetch(CONFIG.URL_SCRIPT, { method: 'POST', body: JSON.stringify(dados) });
-        alert("Feedback gravado na planilha!"); 
-        fecharModal();
+        alert("Ação gravada!"); fecharModal();
     }
 
-    // Exportação Excel
+    // 6. ADM E EXPORTAÇÃO
+    function salvarConfiguracoesADM() {
+        if (typeof google === 'undefined') return alert("Erro: Ambiente Google não detectado.");
+        const btn = event.target;
+        btn.innerText = "GRAVANDO...";
+        const novas = { URL_SCRIPT: document.getElementById('confUrl').value, CSV: document.getElementById('confCsv').value, TOKEN: document.getElementById('confToken').value };
+        google.script.run.withSuccessHandler((msg) => { alert(msg); location.reload(); }).salvarConfiguracoesPlanilha(novas);
+    }
+
     async function exportarFeedbacks() {
         const d = await fetch(CONFIG.URL_SCRIPT + "?action=getExportData").then(r => r.json());
         const ws = XLSX.utils.json_to_sheet(d);
         const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, "Relatório RNF");
+        XLSX.utils.book_append_sheet(wb, ws, "Feedbacks");
         XLSX.writeFile(wb, "Feedbacks_RNF.xlsx");
     }
-
     function f(v) { return (v || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }); }
 </script>
 </body>
