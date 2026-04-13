@@ -9,60 +9,53 @@
     <style>
         :root { 
             --primary: #5cb8a1; --apple-blue: #0071e3; --bg: #f5f5f7; --card-bg: #ffffff;
-            --alert: #d9534f; --text-main: #1d1d1f; --text-sub: #86868b; --warning: #f0ad4e; --border: #e6e6e9;
+            --alert: #d9534f; --text-main: #1d1d1f; --text-sub: #86868b; --border: #e6e6e9;
         }
-
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg); margin: 0; padding: 0; color: var(--text-main); -webkit-font-smoothing: antialiased; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg); margin: 0; color: var(--text-main); -webkit-font-smoothing: antialiased; }
         
-        /* MENU INICIAL */
+        /* HUB INICIAL */
         #menuInicial { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; gap: 40px; padding: 20px; box-sizing: border-box; }
         .hub-header { text-align: center; }
-        .hub-header h1 { font-size: 32px; font-weight: 700; margin: 0; letter-spacing: -1px; }
-        .hub-header p { color: var(--text-sub); margin-top: 10px; }
-        
+        .hub-header h1 { font-size: 32px; font-weight: 700; margin: 0; }
         .card-container { display: flex; gap: 30px; flex-wrap: wrap; justify-content: center; }
         .hub-card { 
-            background: var(--card-bg); width: 300px; padding: 40px; border-radius: 24px; 
+            background: var(--card-bg); width: 280px; padding: 35px; border-radius: 24px; 
             box-shadow: 0 10px 40px rgba(0,0,0,0.04); cursor: pointer; text-align: center;
-            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); border: 2px solid transparent;
+            transition: all 0.3s ease; border: 2px solid transparent;
         }
-        .hub-card:hover { transform: translateY(-12px); border-color: var(--apple-blue); box-shadow: 0 20px 50px rgba(0,0,0,0.1); }
-        .hub-card i { font-size: 48px; color: var(--apple-blue); margin-bottom: 25px; display: block; }
-        .hub-card h3 { margin: 0; font-size: 22px; font-weight: 700; }
-        .hub-card p { color: var(--text-sub); font-size: 14px; margin-top: 12px; line-height: 1.5; }
+        .hub-card:hover { transform: translateY(-10px); border-color: var(--apple-blue); }
+        .hub-card i { font-size: 45px; color: var(--apple-blue); margin-bottom: 20px; display: block; }
 
-        /* PORTAL CONTENT */
+        /* PORTAL GERAL */
         .portal-wrapper { display: none; padding: 20px; }
-        .btn-voltar { position: absolute; top: 25px; left: 25px; background: #eaeaec; border: none; padding: 10px 20px; border-radius: 30px; cursor: pointer; font-size: 12px; font-weight: 700; color: #555; display: flex; align-items: center; gap: 8px; z-index: 100; }
-
-        .container { max-width: 1300px; margin: 40px auto auto; background: var(--card-bg); padding: 30px; border-radius: 16px; box-shadow: 0 8px 30px rgba(0,0,0,0.05); position: relative; }
+        .btn-voltar { position: absolute; top: 25px; left: 25px; background: #eaeaec; border: none; padding: 10px 20px; border-radius: 30px; cursor: pointer; font-weight: 700; z-index: 100; }
+        .container { max-width: 1350px; margin: 40px auto auto; background: var(--card-bg); padding: 30px; border-radius: 16px; box-shadow: 0 8px 30px rgba(0,0,0,0.05); position: relative; }
         .version-badge { position: absolute; top: 15px; right: 25px; font-size: 11px; color: #bbb; font-weight: bold; }
-        h2 { font-weight: 700; font-size: 26px; margin: 0 0 20px 0; letter-spacing: -0.5px; }
-        h2 span { font-weight: 400; color: var(--text-sub); }
-
+        
         .search-section { background: #fdfdfd; padding: 20px; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 25px; display: grid; grid-template-columns: 1fr 1.5fr 1fr 1fr; gap: 15px; }
         .input-group { display: flex; flex-direction: column; }
-        .input-group label { font-size: 10px; font-weight: 700; color: var(--text-sub); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .input-group label { font-size: 10px; font-weight: 700; color: var(--text-sub); margin-bottom: 6px; text-transform: uppercase; }
         .input-group input { padding: 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px; }
         
         #dashGeral { display: none; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 30px; }
-        .card { background: var(--card-bg); padding: 18px 22px; border-radius: 14px; border: 1px solid var(--border); display: flex; flex-direction: column; }
-        .card-value { font-size: 22px; font-weight: 700; }
-        
-        table { width: 100%; border-collapse: collapse; border: 1px solid var(--border); border-radius: 10px; overflow: hidden; margin-top: 10px; }
-        th { text-align: left; padding: 15px; background: #fdfdfd; font-size: 11px; color: var(--text-sub); border-bottom: 2px solid var(--border); }
-        td { padding: 15px; border-bottom: 1px solid var(--border); font-size: 13px; }
-        
+        .card { background: var(--card-bg); padding: 18px; border-radius: 14px; border: 1px solid var(--border); }
+        .card-value { font-size: 20px; font-weight: 700; }
+
+        table { width: 100%; border-collapse: collapse; border-radius: 10px; overflow: hidden; }
+        th { text-align: left; padding: 12px 15px; background: #fdfdfd; font-size: 11px; color: var(--text-sub); border-bottom: 2px solid var(--border); }
+        td { padding: 12px 15px; border-bottom: 1px solid var(--border); font-size: 13px; }
+
         .btn-main { background: var(--apple-blue); color: white; border: none; padding: 12px 25px; border-radius: 30px; cursor: pointer; font-weight: 600; display: flex; align-items: center; gap: 8px; }
         
-        .dellys-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; margin-top: 20px; }
-        .filial-card { background: #fff; padding: 25px; border-radius: 18px; border: 1px solid var(--border); cursor: pointer; transition: 0.2s; text-align: center; }
-        .filial-card:hover { border-color: var(--primary); background: #fafffe; transform: scale(1.02); }
+        /* DELLYS */
+        .dellys-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 20px; margin-top: 20px; }
+        .filial-card { background: #fff; padding: 20px; border-radius: 15px; border: 1px solid var(--border); cursor: pointer; text-align: center; transition: 0.2s; }
+        .filial-card:hover { border-color: var(--primary); background: #fafffe; }
 
         .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); backdrop-filter: blur(4px); }
         .modal-content { background: white; margin: 8% auto; border-radius: 16px; width: 480px; box-shadow: 0 20px 40px rgba(0,0,0,0.2); overflow: hidden; }
-        .btn-st { border: none; padding: 12px; border-radius: 10px; color: white; cursor: pointer; font-weight: 700; opacity: 0.6; }
-        .btn-st.selected { opacity: 1; box-shadow: 0 4px 10px rgba(0,0,0,0.15); }
+        .btn-st { border: none; padding: 12px; border-radius: 10px; color: white; cursor: pointer; font-weight: 700; opacity: 0.4; flex: 1; }
+        .btn-st.selected { opacity: 1; }
     </style>
 </head>
 <body>
@@ -70,26 +63,26 @@
 <div id="menuInicial">
     <div class="hub-header">
         <h1>Olá, Thiago</h1>
-        <p>Selecione o fluxo operacional.</p>
+        <p>Escolha o fluxo de trabalho</p>
     </div>
     <div class="card-container">
         <div class="hub-card" onclick="irPara('todos')">
             <i class="fa-solid fa-layer-group"></i>
             <h3>Todos os Clientes</h3>
-            <p>Versão 1.9.2 Estável. Busca manual por CNPJ.</p>
+            <p>Versão Estável v1.9.2. Busca manual por CNPJ.</p>
         </div>
         <div class="hub-card" onclick="irPara('dellys')">
             <i class="fa-solid fa-truck-fast" style="color: var(--primary);"></i>
             <h3>Projeto Dellys</h3>
-            <p>Seleção automática por Unidades e Postos.</p>
+            <p>Cards por Unidades e postos vinculados.</p>
         </div>
     </div>
 </div>
 
 <div id="portalTodos" class="portal-wrapper">
-    <button class="btn-voltar" onclick="voltar()"><i class="fa-solid fa-chevron-left"></i> VOLTAR AO HUB</button>
+    <button class="btn-voltar" onclick="voltar()"><i class="fa-solid fa-chevron-left"></i> VOLTAR</button>
     <div class="container">
-        <div class="version-badge">v2.0.1 Hub</div>
+        <div class="version-badge">v2.0.2 Estável</div>
         <h2><i class="fa-solid fa-layer-group" style="color:var(--primary); margin-right:10px;"></i>Portal RNF <span>| Geral</span></h2>
         
         <div class="search-section">
@@ -113,38 +106,42 @@
             <button class="btn-main" style="background:#1d6f42" onclick="exportarExcel()"><i class="fa-solid fa-file-excel"></i> EXCEL</button>
         </div>
 
-        <table id="tabelaMaster">
-            <thead><tr><th>Unidade</th><th>Total</th><th>Rec</th><th>%</th><th style="text-align:center;">Ação</th></tr></thead>
+        <table>
+            <thead>
+                <tr>
+                    <th>Unidade / CNPJ</th>
+                    <th style="text-align:center;">Qtd</th>
+                    <th style="text-align:right;">Litros</th>
+                    <th style="text-align:right;">Total</th>
+                    <th style="text-align:right;">Rec</th>
+                    <th style="text-align:center;">%</th>
+                    <th style="text-align:center;">Ação</th>
+                </tr>
+            </thead>
             <tbody id="corpoTabela"></tbody>
         </table>
     </div>
 </div>
 
 <div id="portalDellys" class="portal-wrapper">
-    <button class="btn-voltar" onclick="voltar()"><i class="fa-solid fa-chevron-left"></i> VOLTAR AO HUB</button>
+    <button class="btn-voltar" onclick="voltar()"><i class="fa-solid fa-chevron-left"></i> VOLTAR</button>
     <div class="container">
         <h2><i class="fa-solid fa-truck-fast" style="color:var(--primary); margin-right:10px;"></i>Projeto Dellys <span>| Unidades</span></h2>
         <div id="gridDellys" class="dellys-grid"></div>
     </div>
 </div>
 
-<div id="modalPostos" class="modal">
-    <div class="modal-content">
-        <div style="padding:20px; background:#fdfdfd; border-bottom:1px solid #eee; font-weight:700;" id="nomeFilialModal">Postos Vinculados</div>
-        <div id="listaPostosVinculados" style="max-height:400px; overflow-y:auto;"></div>
-        <div style="padding:15px; text-align:right; border-top:1px solid #eee;"><button onclick="fecharModalPostos()" style="padding:8px 20px; border:none; border-radius:20px; cursor:pointer;">Fechar</button></div>
-    </div>
-</div>
+<div id="modalPostos" class="modal"><div class="modal-content"><div id="nomeFilialModal" style="padding:20px; font-weight:700; border-bottom:1px solid #eee;"></div><div id="listaPostosVinculados" style="max-height:400px; overflow-y:auto;"></div><div style="padding:15px; text-align:right;"><button onclick="fecharModalPostos()" style="padding:8px 20px; cursor:pointer; border-radius:20px; border:none;">Fechar</button></div></div></div>
 
 <div id="modalAcao" class="modal">
     <div class="modal-content">
         <div style="padding:20px; border-bottom:1px solid #eee;"><h3 id="modalTitulo" style="margin:0;">Ação</h3><span id="modalValores" style="font-size:12px; color:#888;"></span></div>
         <div style="padding:20px;">
             <div style="display:flex; gap:10px; margin-bottom:20px;">
-                <button class="btn-st" id="stRec" style="background:var(--primary); flex:1;" onclick="selectStatus('Recolhido', this)">RECOLHIDO</button>
-                <button class="btn-st" id="stPen" style="background:var(--alert); flex:1;" onclick="selectStatus('Pendente', this)">PENDENTE</button>
+                <button class="btn-st" id="stRec" style="background:var(--primary);" onclick="selectStatus('Recolhido', this)">RECOLHIDO</button>
+                <button class="btn-st" id="stPen" style="background:var(--alert);" onclick="selectStatus('Pendente', this)">PENDENTE</button>
             </div>
-            <textarea id="modalObs" rows="4" style="width:100%; border-radius:8px; padding:12px; box-sizing:border-box; border:1px solid var(--border);" placeholder="Observações..."></textarea>
+            <textarea id="modalObs" rows="4" style="width:100%; border-radius:8px; padding:10px; box-sizing:border-box; border:1px solid var(--border);" placeholder="Observações..."></textarea>
         </div>
         <div style="padding:15px; border-top:1px solid #eee; text-align:right;">
             <button onclick="fecharModal()" style="margin-right:15px; border:none; background:none; cursor:pointer;">Cancelar</button>
@@ -160,15 +157,13 @@
         URL_SCRIPT: "https://script.google.com/macros/s/AKfycbxQ8KOKzTetUQfg7vyBLTH9u6rz78HvdJhDLLAmc7wNmnO8s7CMc9SZd8Yw05DOKaL5pQ/exec"
     };
 
-    let dadosPlanilha = [], listaAtual = [], dadosDellys = [];
-    let unidadeAtual = {}, statusSelecionado = "";
+    let dadosPlanilha = [], listaAtual = [], dadosDellys = [], unidadeAtual = {}, statusSelecionado = "";
 
     function irPara(aba) {
         document.getElementById('menuInicial').style.display = 'none';
         if(aba === 'todos') document.getElementById('portalTodos').style.display = 'block';
         else { document.getElementById('portalDellys').style.display = 'block'; carregarDellys(); }
     }
-
     function voltar() {
         document.querySelectorAll('.portal-wrapper').forEach(p => p.style.display = 'none');
         document.getElementById('menuInicial').style.display = 'flex';
@@ -188,7 +183,6 @@
 
     async function carregarDellys() {
         const grid = document.getElementById('gridDellys');
-        grid.innerHTML = "<p>Carregando unidades...</p>";
         try {
             const res = await fetch(CONFIG.URL_SCRIPT + "?action=getDellys");
             dadosDellys = await res.json();
@@ -197,7 +191,7 @@
             filiais.forEach(f => {
                 grid.innerHTML += `<div class="filial-card" onclick="abrirPostosFilial('${f}')"><h3>${f}</h3><p>${dadosDellys.filter(d => d.NOME_FILIAL === f).length} postos</p></div>`;
             });
-        } catch (e) { grid.innerHTML = "Erro ao carregar dados Dellys."; }
+        } catch (e) { grid.innerHTML = "Erro Dellys."; }
     }
 
     function abrirPostosFilial(nomeFilial) {
@@ -209,17 +203,15 @@
             item.style = "padding:15px; border-bottom:1px solid #eee; cursor:pointer;";
             item.innerHTML = `<strong>${p.CNPJ_POSTO}</strong><br><small>${p.NOME_POSTO}</small>`;
             item.onclick = () => {
-                fecharModalPostos();
-                irPara('todos');
+                fecharModalPostos(); irPara('todos');
                 document.getElementById('buscaCnpj').value = p.CNPJ_POSTO;
                 filtrarBanco();
-                setTimeout(() => { consultarWebrouter(); }, 600); // Automação solicitada
+                setTimeout(() => { consultarWebrouter(); }, 600);
             };
             lista.appendChild(item);
         });
         document.getElementById('modalPostos').style.display = 'block';
     }
-
     function fecharModalPostos() { document.getElementById('modalPostos').style.display = 'none'; }
 
     function filtrarBanco() {
@@ -258,9 +250,15 @@
         corpo.innerHTML = "";
         dados.forEach(item => {
             const t = item.valorTotal || 0, r = item.valorRecolhido || 0, p = t > 0 ? ((r/t)*100).toFixed(1) : 0;
+            const qtd = item.quantidadeAbastecimentos || 0;
+            const litros = (item.quantidadeLitros || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 });
             corpo.innerHTML += `<tr>
-                <td><b>${item.cliente.razaoSocial}</b></td>
-                <td>${f(t)}</td><td style="color:green;">${f(r)}</td><td>${p}%</td>
+                <td><div style="font-weight:700;">${item.cliente.razaoSocial}</div><div style="font-size:10px; color:#888;">${item.cliente.cnpj}</div></td>
+                <td style="text-align:center;">${qtd}</td>
+                <td style="text-align:right;">${litros} L</td>
+                <td style="text-align:right;">${f(t)}</td>
+                <td style="text-align:right; color:green;">${f(r)}</td>
+                <td style="text-align:center; font-weight:700;">${p}%</td>
                 <td style="text-align:center;"><button onclick="abrirModal('${item.cliente.razaoSocial}', ${t}, ${r}, '${item.cliente.cnpj}')" style="cursor:pointer; border:1px solid var(--primary); background:none; color:var(--primary); padding:5px 12px; border-radius:6px;">AÇÃO</button></td>
             </tr>`;
         });
@@ -275,7 +273,6 @@
         document.querySelectorAll('.btn-st').forEach(b => b.classList.remove('selected'));
         document.getElementById('modalAcao').style.display = 'block';
     }
-
     function fecharModal() { document.getElementById('modalAcao').style.display = 'none'; }
     function selectStatus(st, btn) {
         statusSelecionado = st;
@@ -301,7 +298,6 @@
             analista: analista,
             obs: document.getElementById('modalObs').value
         };
-
         try {
             await fetch(CONFIG.URL_SCRIPT, { method: 'POST', mode: 'no-cors', body: JSON.stringify(payload) });
             if(statusSelecionado === 'Pendente') {
@@ -310,13 +306,12 @@
                 alert("Gravado e Mensagem Copiada!");
             } else alert("Gravado!");
             fecharModal();
-        } catch (e) { alert("Ação enviada."); fecharModal(); }
+        } catch (e) { alert("Enviado."); fecharModal(); }
         finally { btn.disabled = false; btn.innerText = "GRAVAR"; }
     }
 
     async function exportarExcel() {
-        const btn = event.currentTarget;
-        btn.innerText = "BAIXANDO...";
+        const btn = event.currentTarget; btn.innerText = "BAIXANDO...";
         try {
             const res = await fetch(CONFIG.URL_SCRIPT + "?action=getExportData");
             const dados = await res.json();
