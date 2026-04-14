@@ -3,37 +3,31 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Portal RNF | v4.6</title>
+    <title>Portal RNF | v4.7</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
         :root { --primary: #5cb8a1; --apple-blue: #0071e3; --bg: #f5f5f7; --card-bg: #ffffff; --alert: #d9534f; --dellys-gold: #ffcc00; --text-main: #1d1d1f; --border: #e6e6e9; }
-        body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; background: var(--bg); margin: 0; display: flex; height: 100vh; overflow: hidden; color: var(--text-main); }
-        
+        body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; background: var(--bg); margin: 0; display: flex; height: 100vh; overflow: hidden; }
         .sidebar { width: 80px; background: #1d1d1f; display: flex; flex-direction: column; align-items: center; padding-top: 30px; gap: 20px; transition: 0.3s; z-index: 100; }
         .sidebar:hover { width: 200px; }
         .nav-item { color: #86868b; cursor: pointer; display: flex; align-items: center; gap: 15px; width: 100%; padding: 15px 25px; transition: 0.2s; text-decoration: none; }
         .nav-item:hover, .nav-item.active { color: white; background: #323232; }
         .nav-item span { display: none; font-weight: 600; font-size: 14px; white-space: nowrap; }
         .sidebar:hover .nav-item span { display: block; }
-
         .main-content { flex: 1; padding: 30px; overflow-y: auto; }
         .container { max-width: 1300px; margin: 0 auto; background: var(--card-bg); padding: 30px; border-radius: 16px; box-shadow: 0 8px 30px rgba(0,0,0,0.05); }
         .page { display: none; }
         .page.active { display: block; }
-
         .search-section { background: #fdfdfd; padding: 20px; border-radius: 12px; border: 1px solid var(--border); display: grid; grid-template-columns: 1fr 1.5fr 1fr 0.5fr; gap: 15px; margin-bottom: 20px; }
         .input-group { display: flex; flex-direction: column; }
         .input-group label { font-size: 10px; font-weight: 700; color: #86868b; margin-bottom: 6px; text-transform: uppercase; }
-        .input-group input, select, textarea { padding: 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px; outline: none; }
-        
+        .input-group input { padding: 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px; }
         .dellys-badge { display: none; background: var(--dellys-gold); color: #000; padding: 8px; border-radius: 8px; font-size: 11px; font-weight: 800; margin-top: 10px; text-align: center; }
         .btn-main { background: var(--apple-blue); color: white; border: none; padding: 12px 25px; border-radius: 30px; cursor: pointer; font-weight: 600; }
-        
         table { width: 100%; border-collapse: collapse; margin-top: 20px; }
         th { text-align: left; padding: 12px; font-size: 11px; color: #86868b; border-bottom: 2px solid var(--border); }
         td { padding: 12px; border-bottom: 1px solid var(--border); font-size: 13px; }
-
         .modal { display: none; position: fixed; z-index: 999; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); }
         .modal-content { background: white; margin: 10% auto; padding: 30px; border-radius: 16px; width: 450px; }
     </style>
@@ -49,8 +43,8 @@
     <div id="operacao" class="page active">
         <div class="container">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
-                <h2>Portal RNF <small style="font-size:12px; color:var(--primary);">v4.6</small></h2>
-                <button onclick="exportarFeedbacks()" style="background:#1d6f42; color:white; border:none; border-radius:20px; padding:10px 20px; cursor:pointer;">EXPORTAR EXCEL</button>
+                <h2>Painel RNF <small style="font-size:12px; color:var(--primary);">v4.7</small></h2>
+                <button onclick="exportarFeedbacks()" style="background:#1d6f42; color:white; border:none; border-radius:20px; padding:10px 20px; cursor:pointer; font-weight:600;"><i class="fa-solid fa-file-excel"></i> EXPORTAR</button>
             </div>
 
             <div class="search-section">
@@ -61,13 +55,13 @@
                 </div>
                 <div class="input-group"><label>Razão Social</label><input type="text" id="razaoShow" readonly></div>
                 <div class="input-group"><label>Analista</label><input type="text" id="analistaShow" readonly></div>
-                <div class="input-group"><label>ID</label><input type="text" id="idShow" readonly></div>
+                <div class="input-group"><label>ID Webrouter</label><input type="text" id="idShow" readonly></div>
             </div>
 
             <div style="display:flex; gap:15px; margin-bottom:20px; align-items:flex-end;">
                 <div class="input-group"><label>Início</label><input type="date" id="dInicio" value="2026-04-01"></div>
                 <div class="input-group"><label>Fim</label><input type="date" id="dFim" value="2026-04-30"></div>
-                <button class="btn-main" onclick="consultarWebrouter()">CONSULTAR</button>
+                <button class="btn-main" onclick="consultarWebrouter()">CONSULTAR API</button>
             </div>
 
             <table>
@@ -81,38 +75,37 @@
 
     <div id="config" class="page">
         <div class="container">
-            <h2>Ajustes ADM</h2>
-            <div style="display:flex; flex-direction:column; gap:20px; max-width:700px; margin-top:20px;">
-                <div class="input-group"><label>URL do Script (/exec)</label><input type="text" id="confUrl" value="<?= config.URL_SCRIPT || '' ?>"></div>
-                <div class="input-group"><label>Link do CSV</label><input type="text" id="confCsv" value="<?= config.CSV || '' ?>"></div>
-                <div class="input-group"><label>Token Webrouter</label><input type="text" id="confToken" value="<?= config.TOKEN || '' ?>"></div>
-                <button class="btn-main" onclick="salvarConfiguracoesADM()">SALVAR NA PLANILHA</button>
+            <h2>Configurações do Sistema</h2>
+            <p>Os links abaixo são carregados diretamente da aba <strong>"Configuracoes"</strong> da sua planilha.</p>
+            <div style="display:flex; flex-direction:column; gap:15px; max-width:700px; margin-top:20px;">
+                <div class="input-group"><label>URL Script Ativa</label><input type="text" value="<?= config.URL_SCRIPT ?>" readonly style="background:#f0f0f0;"></div>
+                <div class="input-group"><label>Base CSV Ativa</label><input type="text" value="<?= config.CSV ?>" readonly style="background:#f0f0f0;"></div>
             </div>
         </div>
     </div>
 </div>
 
 <div id="modalAcao" class="modal"><div class="modal-content">
-    <h3>Registrar Ação</h3>
-    <p id="infoUnidadeModal" style="font-weight:bold; color:var(--apple-blue);"></p>
-    <div class="input-group" style="margin-bottom:15px;"><label>Status</label><select id="statusAcao"><option>Recolhido</option><option>Pendente</option><option>Pausado</option></select></div>
-    <div class="input-group" style="margin-bottom:15px;"><label>Observação</label><textarea id="obsAcao" rows="4"></textarea></div>
-    <div style="display:flex; gap:10px; justify-content:flex-end;"><button onclick="fecharModal()" style="cursor:pointer; border:none; background:#eee; padding:10px 20px;">Cancelar</button><button onclick="salvarAcao()" class="btn-main">Gravar</button></div>
+    <h3>Feedback de Recolha</h3>
+    <p id="infoUnidadeModal" style="font-weight:700; color:var(--apple-blue);"></p>
+    <div class="input-group" style="margin-bottom:15px;"><label>Status</label><select id="statusAcao" style="padding:10px; border-radius:8px;"><option>Recolhido</option><option>Pendente</option><option>Pausado</option></select></div>
+    <div class="input-group" style="margin-bottom:15px;"><label>Obs</label><textarea id="obsAcao" rows="4" style="padding:10px; border-radius:8px; border:1px solid var(--border);"></textarea></div>
+    <div style="display:flex; gap:10px; justify-content:flex-end;"><button onclick="fecharModal()" style="padding:10px 20px; border:none; background:#eee; cursor:pointer; border-radius:8px;">Cancelar</button><button onclick="salvarAcao()" class="btn-main">Gravar na Planilha</button></div>
 </div></div>
 
 <script>
-    const CONFIG = { URL_SCRIPT: "<?= config.URL_SCRIPT || '' ?>", CSV: "<?= config.CSV || '' ?>", TOKEN: "<?= config.TOKEN || '' ?>" };
+    const CONFIG = { URL_SCRIPT: "<?= config.URL_SCRIPT ?>", CSV: "<?= config.CSV ?>", TOKEN: "<?= config.TOKEN ?>" };
     let baseAnalistas = [], baseDellys = [], itemSelecionado = null;
 
-    function switchPage(pId, btn) {
+    function switchPage(id, btn) {
         document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
         document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
-        document.getElementById(pId).classList.add('active');
+        document.getElementById(id).classList.add('active');
         btn.classList.add('active');
     }
 
     window.onload = async () => {
-        if (!CONFIG.CSV || !CONFIG.URL_SCRIPT) return;
+        if (!CONFIG.CSV) return;
         try {
             const res = await fetch(CONFIG.CSV);
             const text = await res.text();
@@ -121,7 +114,7 @@
                 return { id: c[0], cnpj: c[1]?.replace(/\D/g, '').padStart(14,'0'), razao: c[2], analista: c[10] };
             });
             baseDellys = await fetch(CONFIG.URL_SCRIPT + "?action=getDellys").then(r => r.json());
-        } catch (e) { console.error("Erro inicial"); }
+        } catch (e) { console.error("Erro na carga inicial."); }
     };
 
     function validarPosto() {
@@ -140,7 +133,7 @@
 
     async function consultarWebrouter() {
         const id = document.getElementById('idShow').value;
-        if(!id) return alert("Selecione um posto.");
+        if(!id) return alert("Identifique o posto pelo CNPJ primeiro.");
         const fDate = (d) => d.split("-").reverse().join("/");
         const res = await fetch("https://cors-anywhere.herokuapp.com/https://way.webrouter.com.br/recolhaDocumentos/abastecimentos/filtro/clientes", {
             method: 'POST',
@@ -156,13 +149,13 @@
         corpo.innerHTML = "";
         dados.forEach(i => {
             const pend = (i.valorTotal || 0) - (i.valorRecolhido || 0);
-            const perc = i.valorTotal > 0 ? ((i.valorRecolhido / i.valorTotal) * 100).toFixed(1) : 0;
+            const perc = i.valorTotal > 0 ? ((i.valorRecolhido / i.valorTotal) * 100).toFixed(1) : "0.0";
             const row = `<tr>
-                <td><strong>${i.cliente.razaoSocial}</strong><br><small>${perc}% recolhido</small></td>
+                <td><strong>${i.cliente.razaoSocial}</strong><br><small style="color:var(--apple-blue)">${perc}% recolhido</small></td>
                 <td style="text-align:right;">${f(i.valorTotal)}</td>
                 <td style="text-align:right; color:green;">${f(i.valorRecolhido)}</td>
-                <td style="text-align:right; color:var(--alert); font-weight:bold;">${f(pend)}</td>
-                <td style="text-align:center;"><button onclick='abrirModal(${JSON.stringify(i)})' style="cursor:pointer; border:1px solid var(--primary); background:none; color:var(--primary); padding:5px 10px; border-radius:5px;">AÇÃO</button></td>
+                <td style="text-align:right; color:var(--alert); font-weight:700;">${f(pend)}</td>
+                <td style="text-align:center;"><button onclick='abrirModal(${JSON.stringify(i)})' style="cursor:pointer; border:1px solid var(--primary); background:none; color:var(--primary); padding:5px 15px; border-radius:5px;">AÇÃO</button></td>
             </tr>`;
             corpo.innerHTML += row;
         });
@@ -172,16 +165,10 @@
     function fecharModal() { document.getElementById('modalAcao').style.display = 'none'; }
 
     async function salvarAcao() {
+        const btn = event.target; btn.innerText = "GRAVANDO...";
         const dados = { cnpjPosto: document.getElementById('buscaCnpj').value, posto: document.getElementById('razaoShow').value, unidade: itemSelecionado.cliente.razaoSocial, total: itemSelecionado.valorTotal, rec: itemSelecionado.valorRecolhido, pendente: (itemSelecionado.valorTotal - itemSelecionado.valorRecolhido), status: document.getElementById('statusAcao').value, analista: document.getElementById('analistaShow').value, obs: document.getElementById('obsAcao').value };
         await fetch(CONFIG.URL_SCRIPT, { method: 'POST', body: JSON.stringify(dados) });
-        alert("Gravado!"); fecharModal();
-    }
-
-    function salvarConfiguracoesADM() {
-        if (typeof google === 'undefined') return alert("Acesse via link /exec");
-        const btn = event.target; btn.innerText = "GRAVANDO...";
-        const n = { URL_SCRIPT: document.getElementById('confUrl').value, CSV: document.getElementById('confCsv').value, TOKEN: document.getElementById('confToken').value };
-        google.script.run.withSuccessHandler((m) => { alert(m); location.reload(); }).salvarConfiguracoesPlanilha(n);
+        alert("Ação gravada com sucesso!"); fecharModal(); btn.innerText = "Gravar na Planilha";
     }
 
     async function exportarFeedbacks() {
@@ -191,6 +178,7 @@
         XLSX.utils.book_append_sheet(wb, ws, "Feedbacks");
         XLSX.writeFile(wb, "Feedbacks_RNF.xlsx");
     }
+    // Formatação brasileira de 2 casas decimais
     function f(v) { return (v || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }); }
 </script>
 </body>
