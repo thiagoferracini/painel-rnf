@@ -16,11 +16,15 @@
         .input-group label { font-size: 11px; font-weight: 700; color: #86868b; margin-bottom: 5px; text-transform: uppercase; }
         .input-group input { padding: 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px; outline: none; }
         .btn-main { background: var(--apple-blue); color: white; border: none; padding: 12px 25px; border-radius: 30px; cursor: pointer; font-weight: 600; }
-        .dellys-badge { display: none; background: var(--dellys-gold); color: #000; padding: 8px; border-radius: 8px; font-size: 11px; font-weight: 800; margin-top: 10px; text-align: center; border: 1px solid #e1b300; }
+        
+        /* Ajuste para múltiplas unidades */
+        .dellys-container { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 10px; }
+        .dellys-badge { background: var(--dellys-gold); color: #000; padding: 6px 10px; border-radius: 6px; font-size: 10px; font-weight: 800; border: 1px solid #e1b300; white-space: nowrap; }
+        
         table { width: 100%; border-collapse: collapse; margin-top: 20px; }
         th { text-align: left; padding: 12px; font-size: 11px; color: #86868b; border-bottom: 2px solid var(--border); }
         td { padding: 15px 12px; border-bottom: 1px solid var(--border); font-size: 13px; }
-        .perc-tag { display: inline-block; padding: 2px 8px; border-radius: 12px; font-weight: 700; font-size: 11px; margin-top: 4px; }
+        .perc-tag { display: inline-block; padding: 2px 8px; border-radius: 12px; font-weight: 700; font-size: 11px; }
         .modal { display: none; position: fixed; z-index: 999; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); backdrop-filter: blur(4px); }
         .modal-content { background: white; margin: 10% auto; padding: 30px; border-radius: 16px; width: 400px; }
     </style>
@@ -29,15 +33,15 @@
 
 <div class="container">
     <div class="header">
-        <h2>Portal RNF <small style="font-size:12px; color:var(--primary); font-weight:400;">v5.1 Blindado</small></h2>
+        <h2>Portal RNF <small style="font-size:12px; color:var(--primary); font-weight:400;">v5.2 Blindado</small></h2>
         <button onclick="exportarExcel()" style="background:#1d6f42; color:white; border:none; padding:10px 20px; border-radius:8px; cursor:pointer; font-weight:600;"><i class="fa-solid fa-file-excel"></i> Exportar Histórico</button>
     </div>
 
     <div class="search-grid">
         <div class="input-group">
             <label>CNPJ Posto</label>
-            <input type="text" id="buscaCnpj" oninput="validarPosto()" placeholder="00.000.000/0000-00">
-            <div id="badgeDellys" class="dellys-badge"></div>
+            <input type="text" id="buscaCnpj" oninput="validarPosto()" placeholder="Buscar CNPJ...">
+            <div id="listaUnidadesDellys" class="dellys-container"></div>
         </div>
         <div class="input-group"><label>Razão Social</label><input type="text" id="razaoShow" readonly style="background:#f5f5f7;"></div>
         <div class="input-group"><label>Analista</label><input type="text" id="analistaShow" readonly style="background:#f5f5f7;"></div>
@@ -45,8 +49,8 @@
     </div>
 
     <div style="display:flex; gap:15px; margin-bottom:25px; align-items:flex-end;">
-        <div class="input-group"><label>Data Início</label><input type="date" id="dInicio" value="2026-02-01"></div>
-        <div class="input-group"><label>Data Fim</label><input type="date" id="dFim" value="2026-04-30"></div>
+        <div class="input-group"><label>Início</label><input type="date" id="dInicio" value="2026-03-01"></div>
+        <div class="input-group"><label>Fim</label><input type="date" id="dFim" value="2026-04-30"></div>
         <button class="btn-main" onclick="consultarWebrouter()">CONSULTAR API</button>
     </div>
 
@@ -68,13 +72,12 @@
 <div id="modalAcao" class="modal"><div class="modal-content">
     <h3>Feedback do Analista</h3>
     <p id="nomeUnidadeModal" style="color:var(--apple-blue); font-weight:700;"></p>
-    <div class="input-group" style="margin-bottom:15px;"><label>Status da Recolha</label><select id="statusAcao" style="padding:10px; border-radius:8px;"><option>Recolhido</option><option>Pendente</option><option>Pausado</option></select></div>
+    <div class="input-group" style="margin-bottom:15px;"><label>Status</label><select id="statusAcao" style="padding:10px; border-radius:8px;"><option>Recolhido</option><option>Pendente</option><option>Pausado</option></select></div>
     <div class="input-group" style="margin-bottom:15px;"><label>Observações</label><textarea id="obsAcao" rows="4" style="padding:10px; border-radius:8px; border:1px solid var(--border);"></textarea></div>
-    <div style="display:flex; gap:10px; justify-content:flex-end;"><button onclick="fecharModal()" style="padding:10px 20px; border:none; background:#eee; cursor:pointer; border-radius:8px;">Voltar</button><button onclick="salvarAcao()" class="btn-main">Salvar Registro</button></div>
+    <div style="display:flex; gap:10px; justify-content:flex-end;"><button onclick="fecharModal()" style="padding:10px 20px; border:none; background:#eee; cursor:pointer; border-radius:8px;">Voltar</button><button onclick="salvarAcao()" class="btn-main">Salvar</button></div>
 </div></div>
 
 <script>
-    // LINKS BLINDADOS
     const CONFIG = { 
         TOKEN: "eyJhbGciOiJub25lIn0.eyJkYXRhRXhwaXJhY2FvIjoxNzc1MTg1MTk3Mzg1LCJpZFJldmVuZGEiOjEsImFwaVJvdXRlciI6IlRPTVRPTSIsImlzQWRtaW5TaXN0ZW1hIjp0cnVlLCJhY2Vzc2FSb3RhSW5kaXZpZHVhbFVzdWFyaW8iOmZhbHNlLCJpc1VzYUxpY2VuY2FSZXZlbmRhIjpmYWxzZSwiaWRUcmFuc3BvcnRhZG9yIjoyMDAwMzQ5LCJpZFVzciI6MzA3OSwibm9tZVVzdWFyaW8iOiJBbmEgQy5CLldvc3phayIsIm5vbWVUcmFuc3BvcnRhZG9yIjoiVFJBTlNQT1JUQURPUkEgQUlMT0ciLCJpZERvY3RvT3duZXIiOjE4NSwiaWRFbXByZXNhIjoyLCJpc0NsaWVudGVBSUxvZyI6dHJ1ZSwiaWRMaWNlbmNhUmV2ZW5kYSI6LTEsImlkR3J1cG9Vc3IiOjMxN30.",
         CSV: "https://docs.google.com/spreadsheets/d/e/2PACX-1vRvPcDWisDWzvafrlP118lQ1t7RIliQDE1zTdqzJVU-r6CC4vm6CkYA0CIT18NiGRNJ4UqnBeD9lXWf/pub?output=csv",
@@ -97,21 +100,30 @@
 
     function validarPosto() {
         let cnpj = document.getElementById('buscaCnpj').value.replace(/\D/g, "").padStart(14,'0');
-        const badge = document.getElementById('badgeDellys');
+        const container = document.getElementById('listaUnidadesDellys');
+        container.innerHTML = ""; 
+
         const a = baseAnalistas.find(x => x.cnpj === cnpj);
         if(a) { 
             document.getElementById('razaoShow').value = a.razao; 
             document.getElementById('idShow').value = a.id; 
             document.getElementById('analistaShow').value = a.analista; 
         }
-        const isD = baseDellys.find(i => Object.values(i).some(v => v.toString().replace(/\D/g, "") === cnpj));
-        badge.style.display = isD ? 'block' : 'none';
-        if(isD) badge.innerHTML = `<i class="fa-solid fa-truck"></i> UNIDADE: ${isD["NOME_FILIAL"] || 'DELLYS'}`;
+
+        // Busca TODAS as unidades vinculadas a esse CNPJ na aba Dellys
+        const vinculadas = baseDellys.filter(i => {
+            return Object.values(i).some(v => v.toString().replace(/\D/g, "") === cnpj);
+        });
+
+        vinculadas.forEach(unidade => {
+            const nome = unidade["NOME_FILIAL"] || unidade["NOME"] || "UNIDADE";
+            container.innerHTML += `<div class="dellys-badge"><i class="fa-solid fa-truck"></i> ${nome}</div>`;
+        });
     }
 
     async function consultarWebrouter() {
         const id = document.getElementById('idShow').value;
-        if(!id) return alert("Identifique o posto primeiro.");
+        if(!id) return alert("Busque o posto primeiro.");
         const fDate = (d) => d.split("-").reverse().join("/");
         const res = await fetch("https://cors-anywhere.herokuapp.com/https://way.webrouter.com.br/recolhaDocumentos/abastecimentos/filtro/clientes", {
             method: 'POST',
@@ -126,12 +138,8 @@
         const corpo = document.getElementById('corpoTabela');
         corpo.innerHTML = "";
         dados.forEach(i => {
-            const total = i.valorTotal || 0;
-            const rec = i.valorRecolhido || 0;
-            const pend = total - rec;
+            const total = i.valorTotal || 0, rec = i.valorRecolhido || 0, pend = total - rec;
             const perc = total > 0 ? ((rec / total) * 100).toFixed(1) : "0.0";
-            
-            // Cor da tag de porcentagem
             let color = perc == 100 ? "#e6fffb" : (perc > 0 ? "#fff7e6" : "#fff1f0");
             let textColor = perc == 100 ? "#389e0d" : (perc > 0 ? "#d46b08" : "#cf1322");
 
@@ -139,9 +147,7 @@
                 <td><strong>${i.cliente.razaoSocial}</strong></td>
                 <td style="text-align:right;">${f(total)}</td>
                 <td style="text-align:right; color:green;">${f(rec)}</td>
-                <td style="text-align:center;">
-                    <span class="perc-tag" style="background:${color}; color:${textColor};">${perc}%</span>
-                </td>
+                <td style="text-align:center;"><span class="perc-tag" style="background:${color}; color:${textColor};">${perc}%</span></td>
                 <td style="text-align:right; color:var(--alert); font-weight:700;">${f(pend)}</td>
                 <td style="text-align:center;"><button onclick='abrirModal(${JSON.stringify(i)})' style="cursor:pointer; border:1px solid var(--primary); background:none; color:var(--primary); padding:5px 12px; border-radius:6px;">AÇÃO</button></td>
             </tr>`;
@@ -153,19 +159,9 @@
 
     async function salvarAcao() {
         const btn = event.target; btn.innerText = "Gravando...";
-        const dados = { 
-            cnpjPosto: document.getElementById('buscaCnpj').value, 
-            posto: document.getElementById('razaoShow').value, 
-            unidade: itemSelecionado.cliente.razaoSocial, 
-            total: itemSelecionado.valorTotal, 
-            rec: itemSelecionado.valorRecolhido, 
-            pendente: (itemSelecionado.valorTotal - itemSelecionado.valorRecolhido), 
-            status: document.getElementById('statusAcao').value, 
-            analista: document.getElementById('analistaShow').value, 
-            obs: document.getElementById('obsAcao').value 
-        };
+        const dados = { cnpjPosto: document.getElementById('buscaCnpj').value, posto: document.getElementById('razaoShow').value, unidade: itemSelecionado.cliente.razaoSocial, total: itemSelecionado.valorTotal, rec: itemSelecionado.valorRecolhido, pendente: (itemSelecionado.valorTotal - itemSelecionado.valorRecolhido), status: document.getElementById('statusAcao').value, analista: document.getElementById('analistaShow').value, obs: document.getElementById('obsAcao').value };
         await fetch(CONFIG.URL_SCRIPT, { method: 'POST', body: JSON.stringify(dados) });
-        alert("Feedback salvo!"); fecharModal(); btn.innerText = "Salvar Registro";
+        alert("Salvo!"); fecharModal(); btn.innerText = "Salvar";
     }
 
     async function exportarExcel() {
