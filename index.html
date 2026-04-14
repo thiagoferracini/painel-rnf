@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Portal RNF - v5.3</title>
+    <title>Portal RNF - v5.5</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
-        :root { --primary: #5cb8a1; --apple-blue: #0071e3; --bg: #f5f5f7; --card-bg: #ffffff; --alert: #d9534f; --dellys-gold: #ffcc00; --text-main: #1d1d1f; --border: #e6e6e9; }
+        :root { --primary: #5cb8a1; --apple-blue: #0071e3; --bg: #f5f5f7; --card-bg: #ffffff; --alert: #d9534f; --dellys-gold: #ffcc00; --text-main: #1d1d1f; --border: #e6e6e9; --pause: #f39c12; }
         body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; background: var(--bg); margin: 0; padding: 20px; color: var(--text-main); }
-        .container { max-width: 1250px; margin: 0 auto; background: var(--card-bg); padding: 30px; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+        .container { max-width: 1400px; margin: 0 auto; background: var(--card-bg); padding: 30px; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
         .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
         .search-grid { display: grid; grid-template-columns: 1.2fr 1.5fr 1fr 0.5fr; gap: 15px; background: #fafafa; padding: 20px; border-radius: 12px; margin-bottom: 20px; border: 1px solid var(--border); }
         .input-group { display: flex; flex-direction: column; }
@@ -21,19 +21,16 @@
         .dellys-badge { background: var(--dellys-gold); color: #000; padding: 6px 10px; border-radius: 6px; font-size: 10px; font-weight: 800; border: 1px solid #e1b300; }
         
         table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        th { text-align: left; padding: 12px; font-size: 11px; color: #86868b; border-bottom: 2px solid var(--border); }
-        td { padding: 15px 12px; border-bottom: 1px solid var(--border); font-size: 13px; }
+        th { text-align: left; padding: 10px; font-size: 10px; color: #86868b; border-bottom: 2px solid var(--border); text-transform: uppercase; }
+        td { padding: 12px 10px; border-bottom: 1px solid var(--border); font-size: 12px; }
         
-        /* Cores de Status para as Linhas */
-        .status-recolhido { background-color: #d4edda !important; } /* Verde */
-        .status-pendente { background-color: #f8d7da !important; }  /* Vermelho */
-        .status-pausado { background-color: #fff3cd !important; }   /* Amarelo */
+        .status-recolhido { background-color: #d4edda !important; }
+        .status-pendente { background-color: #f8d7da !important; }
+        .status-pausado { background-color: #fff3cd !important; }
 
-        .perc-tag { display: inline-block; padding: 2px 8px; border-radius: 12px; font-weight: 700; font-size: 11px; }
+        .perc-tag { display: inline-block; padding: 2px 8px; border-radius: 12px; font-weight: 700; font-size: 10px; }
         .modal { display: none; position: fixed; z-index: 999; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); backdrop-filter: blur(4px); }
         .modal-content { background: white; margin: 10% auto; padding: 30px; border-radius: 16px; width: 400px; }
-        
-        /* Notificação rápida de salvo */
         #toast { visibility: hidden; min-width: 200px; background-color: #333; color: #fff; text-align: center; border-radius: 8px; padding: 16px; position: fixed; z-index: 1000; left: 50%; bottom: 30px; transform: translateX(-50%); }
         #toast.show { visibility: visible; animation: fadein 0.5s, fadeout 0.5s 2.5s; }
         @keyframes fadein { from {bottom: 0; opacity: 0;} to {bottom: 30px; opacity: 1;} }
@@ -46,13 +43,13 @@
 
 <div class="container">
     <div class="header">
-        <h2>Portal RNF <small style="font-size:12px; color:var(--primary); font-weight:400;">v5.3 Produtividade</small></h2>
+        <h2>Portal RNF <small style="font-size:12px; color:var(--primary); font-weight:400;">v5.5 Operacional</small></h2>
         <button onclick="exportarExcel()" style="background:#1d6f42; color:white; border:none; padding:10px 20px; border-radius:8px; cursor:pointer; font-weight:600;"><i class="fa-solid fa-file-excel"></i> Histórico</button>
     </div>
 
     <div class="search-grid">
         <div class="input-group">
-            <label>CNPJ Posto (Busca Automática)</label>
+            <label>CNPJ Posto (Automático)</label>
             <input type="text" id="buscaCnpj" oninput="processarInputCnpj(this.value)" placeholder="00.000.000/0000-00">
             <div id="listaUnidadesDellys" class="dellys-container"></div>
         </div>
@@ -73,6 +70,8 @@
                 <th>Unidade Cliente</th>
                 <th style="text-align:right;">Total</th>
                 <th style="text-align:right;">Recolhido</th>
+                <th style="text-align:right;">Arquivado</th>
+                <th style="text-align:right;">Pausado</th>
                 <th style="text-align:center;">%</th>
                 <th style="text-align:right;">Pendente</th>
                 <th style="text-align:center;">Ação</th>
@@ -121,7 +120,7 @@
         let limpo = valor.replace(/\D/g, "");
         if (limpo.length === 14) {
             validarPosto(limpo);
-            setTimeout(() => { consultarWebrouter(); }, 300); // Dispara a consulta 300ms após validar
+            setTimeout(() => { consultarWebrouter(); }, 300);
         }
     }
 
@@ -144,27 +143,31 @@
         const id = document.getElementById('idShow').value;
         if(!id) return;
         const btn = document.getElementById('btnConsultar');
-        btn.innerText = "BUSCANDO..."; btn.style.opacity = "0.7";
+        btn.innerText = "BUSCANDO..."; 
         
         const fDate = (d) => d.split("-").reverse().join("/");
         try {
-            const res = await fetch("https://cors-anywhere.herokuapp.com/https://way.webrouter.com.br/recolhaDocumentos/abastecimentos/filtro/clientes", {
+            // USANDO PROXY ESTÁVEL (SEM PRECISAR DE CLICAR EM LINK DE LIBERAÇÃO)
+            const res = await fetch("https://corsproxy.io/?https://way.webrouter.com.br/recolhaDocumentos/abastecimentos/filtro/clientes", {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'token': CONFIG.TOKEN },
                 body: JSON.stringify({ "periodo": { "dataInicio": fDate(document.getElementById('dInicio').value), "dataFim": fDate(document.getElementById('dFim').value) }, "estabelecimento": { "id": Number(id) }, "somenteMeusPostos": false })
             });
             const data = await res.json();
             renderTable(data.abastecimentos || []);
-        } finally {
-            btn.innerText = "CONSULTAR API"; btn.style.opacity = "1";
-        }
+        } catch(e) { alert("Erro ao consultar Webrouter. Verifique o Token."); }
+        finally { btn.innerText = "CONSULTAR API"; }
     }
 
     function renderTable(dados) {
         const corpo = document.getElementById('corpoTabela');
         corpo.innerHTML = "";
         dados.forEach((i, index) => {
-            const total = i.valorTotal || 0, rec = i.valorRecolhido || 0, pend = total - rec;
+            const total = i.valorTotal || 0, rec = i.valorRecolhido || 0;
+            const arquivado = i.valorArquivado || 0; // Nova coluna
+            const pausado = i.valorPausado || 0;    // Nova coluna
+            const pend = total - rec - arquivado - pausado;
+            
             const perc = total > 0 ? ((rec / total) * 100).toFixed(1) : "0.0";
             let color = perc == 100 ? "#e6fffb" : (perc > 0 ? "#fff7e6" : "#fff1f0");
             let textColor = perc == 100 ? "#389e0d" : (perc > 0 ? "#d46b08" : "#cf1322");
@@ -173,6 +176,8 @@
                 <td><strong>${i.cliente.razaoSocial}</strong></td>
                 <td style="text-align:right;">${f(total)}</td>
                 <td style="text-align:right; color:green;">${f(rec)}</td>
+                <td style="text-align:right; color:#666;">${f(arquivado)}</td>
+                <td style="text-align:right; color:var(--pause);">${f(pausado)}</td>
                 <td style="text-align:center;"><span class="perc-tag" style="background:${color}; color:${textColor};">${perc}%</span></td>
                 <td style="text-align:right; color:var(--alert); font-weight:700;">${f(pend)}</td>
                 <td style="text-align:center;"><button onclick='abrirModal(${JSON.stringify(i)}, "row-${index}")' style="cursor:pointer; border:1px solid var(--primary); background:none; color:var(--primary); padding:5px 12px; border-radius:6px;">AÇÃO</button></td>
@@ -206,26 +211,16 @@
 
         try {
             await fetch(CONFIG.URL_SCRIPT, { method: 'POST', body: JSON.stringify(dados) });
-            
-            // 1. Aplica a cor na linha conforme o status
             const row = document.getElementById(rowSelecionada);
             row.classList.remove('status-recolhido', 'status-pendente', 'status-pausado');
             if(status === 'Recolhido') row.classList.add('status-recolhido');
             else if(status === 'Pendente') row.classList.add('status-pendente');
             else if(status === 'Pausado') row.classList.add('status-pausado');
-
-            // 2. Fecha modal e mostra aviso rápido
             fecharModal();
-            showToast();
-        } finally {
-            btn.innerText = "Salvar"; btn.disabled = false;
-        }
-    }
-
-    function showToast() {
-        const x = document.getElementById("toast");
-        x.className = "show";
-        setTimeout(function(){ x.className = x.className.replace("show", ""); }, 3000);
+            const x = document.getElementById("toast");
+            x.className = "show";
+            setTimeout(function(){ x.className = x.className.replace("show", ""); }, 3000);
+        } finally { btn.innerText = "Salvar"; btn.disabled = false; }
     }
 
     async function exportarExcel() {
