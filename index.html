@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Portal RNF</title>
+    <title>Portal RNF - v5.3</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
@@ -17,30 +17,43 @@
         .input-group input { padding: 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px; outline: none; }
         .btn-main { background: var(--apple-blue); color: white; border: none; padding: 12px 25px; border-radius: 30px; cursor: pointer; font-weight: 600; }
         
-        /* Ajuste para múltiplas unidades */
         .dellys-container { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 10px; }
-        .dellys-badge { background: var(--dellys-gold); color: #000; padding: 6px 10px; border-radius: 6px; font-size: 10px; font-weight: 800; border: 1px solid #e1b300; white-space: nowrap; }
+        .dellys-badge { background: var(--dellys-gold); color: #000; padding: 6px 10px; border-radius: 6px; font-size: 10px; font-weight: 800; border: 1px solid #e1b300; }
         
         table { width: 100%; border-collapse: collapse; margin-top: 20px; }
         th { text-align: left; padding: 12px; font-size: 11px; color: #86868b; border-bottom: 2px solid var(--border); }
         td { padding: 15px 12px; border-bottom: 1px solid var(--border); font-size: 13px; }
+        
+        /* Cores de Status para as Linhas */
+        .status-recolhido { background-color: #d4edda !important; } /* Verde */
+        .status-pendente { background-color: #f8d7da !important; }  /* Vermelho */
+        .status-pausado { background-color: #fff3cd !important; }   /* Amarelo */
+
         .perc-tag { display: inline-block; padding: 2px 8px; border-radius: 12px; font-weight: 700; font-size: 11px; }
         .modal { display: none; position: fixed; z-index: 999; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); backdrop-filter: blur(4px); }
         .modal-content { background: white; margin: 10% auto; padding: 30px; border-radius: 16px; width: 400px; }
+        
+        /* Notificação rápida de salvo */
+        #toast { visibility: hidden; min-width: 200px; background-color: #333; color: #fff; text-align: center; border-radius: 8px; padding: 16px; position: fixed; z-index: 1000; left: 50%; bottom: 30px; transform: translateX(-50%); }
+        #toast.show { visibility: visible; animation: fadein 0.5s, fadeout 0.5s 2.5s; }
+        @keyframes fadein { from {bottom: 0; opacity: 0;} to {bottom: 30px; opacity: 1;} }
+        @keyframes fadeout { from {bottom: 30px; opacity: 1;} to {bottom: 0; opacity: 0;} }
     </style>
 </head>
 <body>
 
+<div id="toast">Feedback salvo com sucesso!</div>
+
 <div class="container">
     <div class="header">
-        <h2>Portal RNF <small style="font-size:12px; color:var(--primary); font-weight:400;">v5.2 Blindado</small></h2>
-        <button onclick="exportarExcel()" style="background:#1d6f42; color:white; border:none; padding:10px 20px; border-radius:8px; cursor:pointer; font-weight:600;"><i class="fa-solid fa-file-excel"></i> Exportar Histórico</button>
+        <h2>Portal RNF <small style="font-size:12px; color:var(--primary); font-weight:400;">v5.3 Produtividade</small></h2>
+        <button onclick="exportarExcel()" style="background:#1d6f42; color:white; border:none; padding:10px 20px; border-radius:8px; cursor:pointer; font-weight:600;"><i class="fa-solid fa-file-excel"></i> Histórico</button>
     </div>
 
     <div class="search-grid">
         <div class="input-group">
-            <label>CNPJ Posto</label>
-            <input type="text" id="buscaCnpj" oninput="validarPosto()" placeholder="Buscar CNPJ...">
+            <label>CNPJ Posto (Busca Automática)</label>
+            <input type="text" id="buscaCnpj" oninput="processarInputCnpj(this.value)" placeholder="00.000.000/0000-00">
             <div id="listaUnidadesDellys" class="dellys-container"></div>
         </div>
         <div class="input-group"><label>Razão Social</label><input type="text" id="razaoShow" readonly style="background:#f5f5f7;"></div>
@@ -51,7 +64,7 @@
     <div style="display:flex; gap:15px; margin-bottom:25px; align-items:flex-end;">
         <div class="input-group"><label>Início</label><input type="date" id="dInicio" value="2026-03-01"></div>
         <div class="input-group"><label>Fim</label><input type="date" id="dFim" value="2026-04-30"></div>
-        <button class="btn-main" onclick="consultarWebrouter()">CONSULTAR API</button>
+        <button class="btn-main" id="btnConsultar" onclick="consultarWebrouter()">CONSULTAR API</button>
     </div>
 
     <table>
@@ -72,9 +85,15 @@
 <div id="modalAcao" class="modal"><div class="modal-content">
     <h3>Feedback do Analista</h3>
     <p id="nomeUnidadeModal" style="color:var(--apple-blue); font-weight:700;"></p>
-    <div class="input-group" style="margin-bottom:15px;"><label>Status</label><select id="statusAcao" style="padding:10px; border-radius:8px;"><option>Recolhido</option><option>Pendente</option><option>Pausado</option></select></div>
+    <div class="input-group" style="margin-bottom:15px;"><label>Status</label>
+        <select id="statusAcao" style="padding:10px; border-radius:8px;">
+            <option value="Recolhido">Recolhido</option>
+            <option value="Pendente">Pendente</option>
+            <option value="Pausado">Pausado</option>
+        </select>
+    </div>
     <div class="input-group" style="margin-bottom:15px;"><label>Observações</label><textarea id="obsAcao" rows="4" style="padding:10px; border-radius:8px; border:1px solid var(--border);"></textarea></div>
-    <div style="display:flex; gap:10px; justify-content:flex-end;"><button onclick="fecharModal()" style="padding:10px 20px; border:none; background:#eee; cursor:pointer; border-radius:8px;">Voltar</button><button onclick="salvarAcao()" class="btn-main">Salvar</button></div>
+    <div style="display:flex; gap:10px; justify-content:flex-end;"><button onclick="fecharModal()" style="padding:10px 20px; border:none; background:#eee; cursor:pointer; border-radius:8px;">Voltar</button><button id="btnSalvar" onclick="salvarAcao()" class="btn-main">Salvar</button></div>
 </div></div>
 
 <script>
@@ -84,7 +103,7 @@
         URL_SCRIPT: "https://script.google.com/macros/s/AKfycbzhL34Iw-mkDvH8WOVh5NV_7Lkma6hzN474887qAoiL9tTtVYCyFvTp3CD3-Exc-5tF2w/exec"
     };
 
-    let baseAnalistas = [], baseDellys = [], itemSelecionado = null;
+    let baseAnalistas = [], baseDellys = [], itemSelecionado = null, rowSelecionada = null;
 
     window.onload = async () => {
         try {
@@ -95,73 +114,118 @@
                 return { id: c[0], cnpj: c[1]?.replace(/\D/g, '').padStart(14,'0'), razao: c[2], analista: c[10] };
             });
             baseDellys = await fetch(CONFIG.URL_SCRIPT + "?action=getDellys").then(r => r.json());
-        } catch (e) { console.error("Erro na carga inicial."); }
+        } catch (e) { console.error("Erro inicial."); }
     };
 
-    function validarPosto() {
-        let cnpj = document.getElementById('buscaCnpj').value.replace(/\D/g, "").padStart(14,'0');
+    function processarInputCnpj(valor) {
+        let limpo = valor.replace(/\D/g, "");
+        if (limpo.length === 14) {
+            validarPosto(limpo);
+            setTimeout(() => { consultarWebrouter(); }, 300); // Dispara a consulta 300ms após validar
+        }
+    }
+
+    function validarPosto(cnpj) {
         const container = document.getElementById('listaUnidadesDellys');
         container.innerHTML = ""; 
-
         const a = baseAnalistas.find(x => x.cnpj === cnpj);
         if(a) { 
             document.getElementById('razaoShow').value = a.razao; 
             document.getElementById('idShow').value = a.id; 
             document.getElementById('analistaShow').value = a.analista; 
         }
-
-        // Busca TODAS as unidades vinculadas a esse CNPJ na aba Dellys
-        const vinculadas = baseDellys.filter(i => {
-            return Object.values(i).some(v => v.toString().replace(/\D/g, "") === cnpj);
-        });
-
-        vinculadas.forEach(unidade => {
-            const nome = unidade["NOME_FILIAL"] || unidade["NOME"] || "UNIDADE";
-            container.innerHTML += `<div class="dellys-badge"><i class="fa-solid fa-truck"></i> ${nome}</div>`;
+        const vinculadas = baseDellys.filter(i => Object.values(i).some(v => v.toString().replace(/\D/g, "") === cnpj));
+        vinculadas.forEach(u => {
+            container.innerHTML += `<div class="dellys-badge"><i class="fa-solid fa-truck"></i> ${u["NOME_FILIAL"] || 'UNIDADE'}</div>`;
         });
     }
 
     async function consultarWebrouter() {
         const id = document.getElementById('idShow').value;
-        if(!id) return alert("Busque o posto primeiro.");
+        if(!id) return;
+        const btn = document.getElementById('btnConsultar');
+        btn.innerText = "BUSCANDO..."; btn.style.opacity = "0.7";
+        
         const fDate = (d) => d.split("-").reverse().join("/");
-        const res = await fetch("https://cors-anywhere.herokuapp.com/https://way.webrouter.com.br/recolhaDocumentos/abastecimentos/filtro/clientes", {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'token': CONFIG.TOKEN },
-            body: JSON.stringify({ "periodo": { "dataInicio": fDate(document.getElementById('dInicio').value), "dataFim": fDate(document.getElementById('dFim').value) }, "estabelecimento": { "id": Number(id) }, "somenteMeusPostos": false })
-        });
-        const data = await res.json();
-        renderTable(data.abastecimentos || []);
+        try {
+            const res = await fetch("https://cors-anywhere.herokuapp.com/https://way.webrouter.com.br/recolhaDocumentos/abastecimentos/filtro/clientes", {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'token': CONFIG.TOKEN },
+                body: JSON.stringify({ "periodo": { "dataInicio": fDate(document.getElementById('dInicio').value), "dataFim": fDate(document.getElementById('dFim').value) }, "estabelecimento": { "id": Number(id) }, "somenteMeusPostos": false })
+            });
+            const data = await res.json();
+            renderTable(data.abastecimentos || []);
+        } finally {
+            btn.innerText = "CONSULTAR API"; btn.style.opacity = "1";
+        }
     }
 
     function renderTable(dados) {
         const corpo = document.getElementById('corpoTabela');
         corpo.innerHTML = "";
-        dados.forEach(i => {
+        dados.forEach((i, index) => {
             const total = i.valorTotal || 0, rec = i.valorRecolhido || 0, pend = total - rec;
             const perc = total > 0 ? ((rec / total) * 100).toFixed(1) : "0.0";
             let color = perc == 100 ? "#e6fffb" : (perc > 0 ? "#fff7e6" : "#fff1f0");
             let textColor = perc == 100 ? "#389e0d" : (perc > 0 ? "#d46b08" : "#cf1322");
 
-            corpo.innerHTML += `<tr>
+            corpo.innerHTML += `<tr id="row-${index}">
                 <td><strong>${i.cliente.razaoSocial}</strong></td>
                 <td style="text-align:right;">${f(total)}</td>
                 <td style="text-align:right; color:green;">${f(rec)}</td>
                 <td style="text-align:center;"><span class="perc-tag" style="background:${color}; color:${textColor};">${perc}%</span></td>
                 <td style="text-align:right; color:var(--alert); font-weight:700;">${f(pend)}</td>
-                <td style="text-align:center;"><button onclick='abrirModal(${JSON.stringify(i)})' style="cursor:pointer; border:1px solid var(--primary); background:none; color:var(--primary); padding:5px 12px; border-radius:6px;">AÇÃO</button></td>
+                <td style="text-align:center;"><button onclick='abrirModal(${JSON.stringify(i)}, "row-${index}")' style="cursor:pointer; border:1px solid var(--primary); background:none; color:var(--primary); padding:5px 12px; border-radius:6px;">AÇÃO</button></td>
             </tr>`;
         });
     }
 
-    function abrirModal(item) { itemSelecionado = item; document.getElementById('nomeUnidadeModal').innerText = item.cliente.razaoSocial; document.getElementById('modalAcao').style.display = 'block'; }
+    function abrirModal(item, rowId) { 
+        itemSelecionado = item; 
+        rowSelecionada = rowId;
+        document.getElementById('nomeUnidadeModal').innerText = item.cliente.razaoSocial; 
+        document.getElementById('modalAcao').style.display = 'block'; 
+    }
+    
     function fecharModal() { document.getElementById('modalAcao').style.display = 'none'; }
 
     async function salvarAcao() {
-        const btn = event.target; btn.innerText = "Gravando...";
-        const dados = { cnpjPosto: document.getElementById('buscaCnpj').value, posto: document.getElementById('razaoShow').value, unidade: itemSelecionado.cliente.razaoSocial, total: itemSelecionado.valorTotal, rec: itemSelecionado.valorRecolhido, pendente: (itemSelecionado.valorTotal - itemSelecionado.valorRecolhido), status: document.getElementById('statusAcao').value, analista: document.getElementById('analistaShow').value, obs: document.getElementById('obsAcao').value };
-        await fetch(CONFIG.URL_SCRIPT, { method: 'POST', body: JSON.stringify(dados) });
-        alert("Salvo!"); fecharModal(); btn.innerText = "Salvar";
+        const btn = document.getElementById('btnSalvar');
+        const status = document.getElementById('statusAcao').value;
+        btn.innerText = "GRAVANDO..."; btn.disabled = true;
+
+        const dados = { 
+            cnpjPosto: document.getElementById('buscaCnpj').value, 
+            posto: document.getElementById('razaoShow').value, 
+            unidade: itemSelecionado.cliente.razaoSocial, 
+            total: itemSelecionado.valorTotal, rec: itemSelecionado.valorRecolhido, 
+            pendente: (itemSelecionado.valorTotal - itemSelecionado.valorRecolhido), 
+            status: status, analista: document.getElementById('analistaShow').value, 
+            obs: document.getElementById('obsAcao').value 
+        };
+
+        try {
+            await fetch(CONFIG.URL_SCRIPT, { method: 'POST', body: JSON.stringify(dados) });
+            
+            // 1. Aplica a cor na linha conforme o status
+            const row = document.getElementById(rowSelecionada);
+            row.classList.remove('status-recolhido', 'status-pendente', 'status-pausado');
+            if(status === 'Recolhido') row.classList.add('status-recolhido');
+            else if(status === 'Pendente') row.classList.add('status-pendente');
+            else if(status === 'Pausado') row.classList.add('status-pausado');
+
+            // 2. Fecha modal e mostra aviso rápido
+            fecharModal();
+            showToast();
+        } finally {
+            btn.innerText = "Salvar"; btn.disabled = false;
+        }
+    }
+
+    function showToast() {
+        const x = document.getElementById("toast");
+        x.className = "show";
+        setTimeout(function(){ x.className = x.className.replace("show", ""); }, 3000);
     }
 
     async function exportarExcel() {
