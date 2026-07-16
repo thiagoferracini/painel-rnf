@@ -1,0 +1,1079 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Painel de Recolha — Ailog Tech</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#FAFAF8; --surface:#FFFFFF; --border:#E5E3DC;
+  --ink:#1C1C1A; --ink-soft:#5F5E5A; --ink-faint:#8B8A84;
+  --accent:#1B4D4A; --accent-soft:#E4EEEC;
+  --green:#3B6D11; --green-soft:#EAF3DE;
+  --terracota:#D85A30; --terracota-soft:#FAECE7;
+  --gray:#888780; --gray-soft:#F1EFE8;
+  --radius:10px; --radius-lg:14px;
+}
+*{box-sizing:border-box; margin:0; padding:0;}
+html{-webkit-font-smoothing:antialiased;}
+body{
+  font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Inter','Segoe UI',sans-serif;
+  letter-spacing:-0.01em; background:var(--bg); color:var(--ink); min-height:100vh; line-height:1.5;
+}
+h1,h2,h3{letter-spacing:-0.022em;}
+
+/* ===== LOGIN ===== */
+#tela-login{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;}
+.logo-login{height:32px;width:auto;max-width:380px;display:block;margin:0 auto 28px;}
+.cartao-login{width:100%;max-width:380px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:40px 32px;}
+.cartao-login h1{font-size:22px;font-weight:600;letter-spacing:-0.025em;margin-bottom:4px;}
+.cartao-login p.sub{font-size:14px;color:var(--ink-soft);margin-bottom:28px;}
+label{display:block;font-size:13px;color:var(--ink-soft);margin-bottom:6px;font-weight:500;}
+input[type=email],input[type=password],input[type=text],input[type=date],select,textarea{
+  width:100%;padding:11px 13px;border:1px solid var(--border);border-radius:var(--radius);
+  font-size:14px;margin-bottom:16px;background:var(--bg);color:var(--ink);font-family:inherit;
+}
+textarea{resize:vertical;min-height:60px;}
+input:focus,select:focus,textarea:focus{outline:2px solid var(--accent);outline-offset:1px;border-color:var(--accent);}
+button.primario{width:100%;padding:12px;background:var(--accent);color:#fff;border:none;border-radius:var(--radius);font-size:14px;font-weight:600;cursor:pointer;transition:opacity .15s;}
+button.primario:hover{opacity:.9;}
+button.primario:disabled{opacity:.5;cursor:not-allowed;}
+.erro-login{background:var(--terracota-soft);color:#7A2E18;font-size:13px;padding:10px 12px;border-radius:var(--radius);margin-bottom:16px;display:none;}
+.rodape-login{margin-top:20px;font-size:12px;color:var(--ink-faint);text-align:center;}
+
+/* ===== APP ===== */
+#app{display:none;min-height:100vh;}
+.layout{display:flex;min-height:100vh;}
+.sidebar{width:240px;background:var(--surface);border-right:1px solid var(--border);padding:24px 18px;display:flex;flex-direction:column;flex-shrink:0;}
+.marca-linha{display:flex;align-items:center;gap:10px;margin-bottom:2px;}
+.logo-ailog{height:26px;width:auto;display:block;}
+.marca{font-size:15px;font-weight:600;}
+.marca-sub{font-size:12px;color:var(--ink-faint);margin-bottom:28px;}
+.nav-secao{font-size:11px;font-weight:600;color:var(--ink-faint);text-transform:uppercase;letter-spacing:.05em;margin:20px 0 6px 12px;}
+.nav-item{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:var(--radius);font-size:14px;color:var(--ink-soft);cursor:pointer;margin-bottom:2px;}
+.nav-item.ativo{background:var(--accent-soft);color:var(--accent);font-weight:600;}
+.nav-item:hover:not(.ativo){background:var(--gray-soft);}
+.usuario-box{margin-top:auto;padding-top:16px;border-top:1px solid var(--border);font-size:13px;}
+.usuario-nome{font-weight:600;margin-bottom:2px;}
+.usuario-papel{color:var(--ink-faint);font-size:12px;margin-bottom:10px;}
+.botao-saida{font-size:13px;color:var(--ink-soft);cursor:pointer;text-decoration:underline;}
+
+.conteudo{flex:1;padding:32px 40px;overflow-x:auto;}
+.cabecalho-pagina{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:24px;flex-wrap:wrap;gap:12px;}
+.cabecalho-pagina h2{font-size:24px;font-weight:600;letter-spacing:-0.025em;}
+.cabecalho-pagina p{font-size:13px;color:var(--ink-soft);margin-top:2px;}
+
+/* ===== COMPONENTES ===== */
+.painel{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:24px;margin-bottom:24px;}
+.painel h3{font-size:15px;font-weight:600;margin-bottom:16px;}
+
+.filtros{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:24px;align-items:flex-end;}
+.filtros label{margin-bottom:4px;}
+.filtros .campo{display:flex;flex-direction:column;}
+.filtros input,.filtros select{margin-bottom:0;}
+
+.grid-kpi{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:24px;}
+.kpi{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:14px 16px;}
+.kpi .rotulo{font-size:11px;color:var(--ink-soft);margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.kpi .valor{font-size:20px;font-weight:600;letter-spacing:-0.015em;}
+.kpi .valor.verde{color:var(--green);}
+.kpi .valor.terracota{color:var(--terracota);}
+.kpi .sub-valor{font-size:11px;color:var(--ink-faint);margin-top:2px;}
+.barra-progresso{height:6px;border-radius:3px;background:var(--gray-soft);overflow:hidden;display:flex;margin-top:8px;}
+.barra-progresso .seg-recolhido{background:var(--green);}
+.barra-progresso .seg-pendente{background:var(--terracota);}
+
+table{width:100%;border-collapse:collapse;font-size:13px;}
+th{text-align:left;padding:10px 12px;color:var(--ink-soft);font-weight:500;border-bottom:1px solid var(--border);white-space:nowrap;}
+td{padding:10px 12px;border-bottom:1px solid var(--border);vertical-align:middle;}
+tr:hover td{background:var(--gray-soft);}
+.badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:12px;font-weight:600;}
+.badge.verde{background:var(--green-soft);color:var(--green);}
+.badge.terracota{background:var(--terracota-soft);color:var(--terracota);}
+.badge.cinza{background:var(--gray-soft);color:var(--gray);}
+.badge.azul{background:var(--accent-soft);color:var(--accent);}
+
+.estado-vazio{text-align:center;padding:60px 20px;color:var(--ink-faint);}
+.estado-vazio p{font-size:14px;margin-top:8px;}
+.carregando{display:flex;align-items:center;gap:8px;color:var(--ink-soft);font-size:13px;padding:20px;}
+.spinner{width:14px;height:14px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:girar .7s linear infinite;}
+@keyframes girar{to{transform:rotate(360deg);}}
+
+.botao-acao{
+  display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:600;
+  color:var(--accent);background:var(--accent-soft);border:none;cursor:pointer;
+  padding:7px 14px;border-radius:var(--radius);white-space:nowrap;
+}
+.botao-acao:hover{opacity:.85;}
+.botao-acao.secundario{background:var(--gray-soft);color:var(--ink-soft);}
+
+/* ===== MODAL DE ATIVIDADE ===== */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.4);display:flex;align-items:center;justify-content:center;z-index:100;padding:20px;}
+.modal{background:var(--surface);border-radius:var(--radius-lg);padding:28px;width:100%;max-width:480px;max-height:90vh;overflow-y:auto;}
+.modal h3{font-size:16px;font-weight:600;margin-bottom:4px;}
+.modal .sub{font-size:13px;color:var(--ink-soft);margin-bottom:20px;}
+.modal-acoes{display:flex;gap:10px;margin-top:8px;}
+.modal-acoes button{flex:1;}
+.modal label{margin-bottom:4px;display:block;}
+.checkbox-linha{display:flex;align-items:center;gap:8px;margin-bottom:16px;font-size:14px;}
+.checkbox-linha input[type=checkbox]{width:16px;height:16px;accent-color:var(--accent);margin-bottom:0;}
+.status-select{margin-bottom:16px;}
+
+/* ===== BUSCA DE POSTOS ===== */
+.resultado-posto .posto-cabecalho{
+  background:var(--accent);color:#fff;border-radius:var(--radius-lg);padding:16px 20px;margin-bottom:16px;
+}
+.resultado-posto .posto-cabecalho h3{color:#fff;font-size:16px;margin-bottom:2px;}
+.resultado-posto .posto-cabecalho p{color:rgba(255,255,255,.75);font-size:12px;}
+
+@media(max-width:760px){
+  .layout{flex-direction:column;}
+  .sidebar{width:100%;flex-direction:row;align-items:center;padding:14px 18px;}
+  .marca-sub,.usuario-box,.nav-secao{display:none;}
+  .conteudo{padding:20px;}
+}
+</style>
+</head>
+<body>
+
+<!-- ===== LOGIN ===== -->
+<div id="tela-login">
+  <img id="logo-login-img" alt="Ailog Tech" class="logo-login">
+  <div class="cartao-login">
+    <h1>Painel de Recolha</h1>
+    <p class="sub">Acompanhamento de índices por cliente</p>
+    <div class="erro-login" id="erro-login"></div>
+    <form id="form-login">
+      <label for="email">E-mail</label>
+      <input type="email" id="email" required autocomplete="email">
+      <label for="senha">Senha</label>
+      <input type="password" id="senha" required autocomplete="current-password">
+      <button type="submit" class="primario" id="btn-login">Entrar</button>
+    </form>
+    <p class="rodape-login">Esqueceu a senha? Fale com a equipe Ailog Tech.</p>
+  </div>
+</div>
+
+<!-- ===== APP ===== -->
+<div id="app">
+  <div class="layout">
+    <aside class="sidebar">
+      <div>
+        <div class="marca-linha">
+          <img id="logo-sidebar-img" alt="Ailog Tech" class="logo-ailog">
+          <div class="marca">Painel de Recolha</div>
+        </div>
+        <div class="marca-sub">Ailog Tech</div>
+      </div>
+      <nav>
+        <div class="nav-secao">Visão geral</div>
+        <div class="nav-item ativo" data-pagina="dashboard">📊 Dashboard</div>
+        <div class="nav-secao" id="nav-secao-operacional" style="display:none">Operacional</div>
+        <div class="nav-item" data-pagina="postos" id="nav-postos" style="display:none">🔍 Consulta de Postos</div>
+        <div class="nav-secao" id="nav-secao-adm" style="display:none">Administração</div>
+        <div class="nav-item" data-pagina="adm" id="nav-adm" style="display:none">⚙️ Administração</div>
+      </nav>
+      <div class="usuario-box">
+        <div class="usuario-nome" id="usuario-nome">—</div>
+        <div class="usuario-papel" id="usuario-papel">—</div>
+        <div class="botao-saida" id="btn-sair">Sair</div>
+      </div>
+    </aside>
+
+    <main class="conteudo">
+      <!-- DASHBOARD (painel de clientes existente) -->
+      <div id="pagina-dashboard">
+        <div class="cabecalho-pagina">
+          <div>
+            <h2>Visão geral</h2>
+            <p id="subtitulo-dashboard">Carregando dados...</p>
+          </div>
+        </div>
+        <div id="area-totais-globais"></div>
+        <div id="area-favoritos"></div>
+        <div class="filtros">
+          <div class="campo">
+            <label>Cliente</label>
+            <input type="text" id="filtro-cliente-busca" placeholder="Buscar por nome ou CNPJ" list="lista-clientes" style="display:none; min-width:280px; margin-bottom:0;">
+            <datalist id="lista-clientes"></datalist>
+          </div>
+          <div class="campo">
+            <label>Data início</label>
+            <input type="date" id="filtro-data-inicio" style="margin-bottom:0;">
+          </div>
+          <div class="campo">
+            <label>Data fim</label>
+            <input type="date" id="filtro-data-fim" style="margin-bottom:0;">
+          </div>
+          <button class="primario" id="btn-buscar" style="width:auto;padding:11px 20px;">Buscar</button>
+        </div>
+        <div id="area-resultado">
+          <div class="estado-vazio">
+            <div style="font-size:28px;">🔍</div>
+            <p>Selecione os filtros acima e clique em Buscar</p>
+          </div>
+        </div>
+        <div id="area-detalhe-cliente" style="display:none;"></div>
+      </div>
+
+      <!-- CONSULTA DE POSTOS -->
+      <div id="pagina-postos" style="display:none;">
+        <div class="cabecalho-pagina">
+          <div>
+            <h2>Consulta de Postos</h2>
+            <p>Pesquise um posto e registre atividades por cliente</p>
+          </div>
+        </div>
+        <div class="filtros">
+          <div class="campo" style="flex:1; min-width:240px;">
+            <label>Posto (nome ou CNPJ)</label>
+            <input type="text" id="posto-busca" placeholder="Ex: POSTO ALFA ou 03.573.820/0001-60" list="lista-postos" style="margin-bottom:0;">
+            <datalist id="lista-postos"></datalist>
+          </div>
+          <div class="campo">
+            <label>Data início</label>
+            <input type="date" id="posto-data-inicio" style="margin-bottom:0;">
+          </div>
+          <div class="campo">
+            <label>Data fim</label>
+            <input type="date" id="posto-data-fim" style="margin-bottom:0;">
+          </div>
+          <button class="primario" id="btn-buscar-posto" style="width:auto;padding:11px 20px;">Consultar</button>
+        </div>
+        <div id="area-resultado-posto">
+          <div class="estado-vazio">
+            <div style="font-size:28px;">🏪</div>
+            <p>Pesquise um posto para ver os dados de recolhimento por cliente</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- ADMINISTRAÇÃO -->
+      <div id="pagina-adm" style="display:none;">
+        <div class="cabecalho-pagina">
+          <div>
+            <h2>Administração</h2>
+            <p>Gerencie usuários e configurações do sistema</p>
+          </div>
+        </div>
+        <div class="painel">
+          <h3>Usuários cadastrados</h3>
+          <div id="area-usuarios">
+            <div class="carregando"><div class="spinner"></div>Carregando...</div>
+          </div>
+        </div>
+        <div class="painel">
+          <h3>Resumo do sistema</h3>
+          <div id="area-resumo-adm">
+            <div class="carregando"><div class="spinner"></div>Carregando...</div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<!-- ===== MODAL DE ATIVIDADE ===== -->
+<div class="modal-overlay" id="modal-atividade" style="display:none;">
+  <div class="modal">
+    <h3 id="modal-titulo">Registrar atividade</h3>
+    <p class="sub" id="modal-sub"></p>
+    <div class="checkbox-linha">
+      <input type="checkbox" id="ativ-nota-enviada">
+      <label for="ativ-nota-enviada" style="margin-bottom:0;">Nota fiscal enviada pelo posto</label>
+    </div>
+    <label>Status</label>
+    <select id="ativ-status" class="status-select">
+      <option value="pendente">⏳ Pendente</option>
+      <option value="em_contato">📞 Em contato</option>
+      <option value="resolvido">✅ Resolvido</option>
+      <option value="sem_retorno">🚫 Sem retorno</option>
+    </select>
+    <label>Observação</label>
+    <textarea id="ativ-observacao" placeholder="Descreva o contato, próximos passos, etc."></textarea>
+    <div class="modal-acoes">
+      <button class="primario secundario" id="modal-cancelar" style="background:var(--gray-soft);color:var(--ink);width:auto;">Cancelar</button>
+      <button class="primario" id="modal-salvar">Salvar atividade</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// =====================================================================
+// CONFIGURAÇÃO
+// =====================================================================
+const SUPABASE_URL = 'https://xtkgwqynvrwonfwkurrc.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_G0wADH5OQEXY16UXTZjvWw_lmDMGtcw';
+const EDGE_FUNCTION_URL = SUPABASE_URL + '/functions/v1/consultar-recolhas';
+
+const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+// Estado global
+let sessaoAtual = null;
+let perfilAtual = null;
+let clientesDisponiveis = [];
+let postosDisponiveis = [];
+let favoritosIds = new Set();
+let ultimosRegistrosVisaoInicial = null;
+let ultimaAtualizacaoVisaoInicial = null;
+let ultimosRegistrosBusca = null;
+let ordenacaoAtualResultado = { campo: null, direcao: 'asc' };
+let graficoEvolucao = null;
+let modalAtividade = { postoIdApi: null, clienteCnpj: null, clienteNome: null, periodo: null, id: null };
+
+// =====================================================================
+// LOGO (embutida via base64 — será preenchida pela versão com logo)
+// =====================================================================
+const LOGO_BASE64 = null; // substitua pelo data URI se quiser logo embutida
+
+// =====================================================================
+// LOGIN
+// =====================================================================
+document.getElementById('form-login').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const email = document.getElementById('email').value.trim();
+  const senha = document.getElementById('senha').value;
+  const btn = document.getElementById('btn-login');
+  const erroBox = document.getElementById('erro-login');
+  erroBox.style.display = 'none';
+  btn.disabled = true; btn.textContent = 'Entrando...';
+  const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password: senha });
+  btn.disabled = false; btn.textContent = 'Entrar';
+  if (error) { erroBox.textContent = 'E-mail ou senha incorretos.'; erroBox.style.display = 'block'; return; }
+  await iniciarApp(data.session);
+});
+
+document.getElementById('btn-sair').addEventListener('click', async () => {
+  await supabaseClient.auth.signOut(); location.reload();
+});
+
+(async () => {
+  const { data } = await supabaseClient.auth.getSession();
+  if (data?.session) await iniciarApp(data.session);
+})();
+
+// =====================================================================
+// INICIALIZAÇÃO
+// =====================================================================
+async function iniciarApp(sessao) {
+  sessaoAtual = sessao;
+  const { data: perfil, error } = await supabaseClient
+    .from('perfis').select('papel, cliente_id, nome').eq('id', sessao.user.id).single();
+  if (error || !perfil) {
+    document.getElementById('erro-login').textContent = 'Conta sem perfil configurado. Fale com a equipe Ailog Tech.';
+    document.getElementById('erro-login').style.display = 'block';
+    return;
+  }
+  perfilAtual = perfil;
+  document.getElementById('tela-login').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+  document.getElementById('usuario-nome').textContent = perfil.nome || sessao.user.email;
+  document.getElementById('usuario-papel').textContent = perfil.papel === 'staff' ? 'Equipe Ailog Tech' : 'Cliente';
+
+  // Mostrar itens de menu para staff
+  if (perfil.papel === 'staff') {
+    document.getElementById('nav-secao-operacional').style.display = 'block';
+    document.getElementById('nav-postos').style.display = 'flex';
+    document.getElementById('nav-secao-adm').style.display = 'block';
+    document.getElementById('nav-adm').style.display = 'flex';
+    document.getElementById('filtro-cliente-busca').style.display = 'inline-block';
+  }
+
+  // Datas padrão
+  const hoje = new Date();
+  const inicioMes = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
+  document.getElementById('filtro-data-fim').value = hoje.toISOString().slice(0,10);
+  document.getElementById('filtro-data-inicio').value = inicioMes.toISOString().slice(0,10);
+  document.getElementById('posto-data-fim').value = hoje.toISOString().slice(0,10);
+  document.getElementById('posto-data-inicio').value = inicioMes.toISOString().slice(0,10);
+
+  await Promise.all([
+    carregarFiltrosClientes(),
+    perfil.papel === 'staff' ? carregarFiltrosPostos() : Promise.resolve(),
+  ]);
+
+  if (perfil.papel === 'staff') {
+    const { data: favs } = await supabaseClient.from('favoritos').select('cliente_id').eq('usuario_id', sessao.user.id);
+    favoritosIds = new Set((favs || []).map(f => f.cliente_id));
+    await carregarVisaoInicial();
+    carregarAdm();
+  }
+}
+
+// =====================================================================
+// NAVEGAÇÃO
+// =====================================================================
+document.querySelectorAll('.nav-item').forEach(item => {
+  item.addEventListener('click', () => {
+    const pagina = item.dataset.pagina;
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('ativo'));
+    item.classList.add('ativo');
+    document.querySelectorAll('#pagina-dashboard,#pagina-postos,#pagina-adm').forEach(p => p.style.display = 'none');
+    document.getElementById('pagina-' + pagina).style.display = 'block';
+  });
+});
+
+// =====================================================================
+// FILTROS
+// =====================================================================
+async function carregarFiltrosClientes() {
+  const { data: clientes } = await supabaseClient.from('clientes').select('id, nome, cnpj').eq('ativo', true).order('nome');
+  clientesDisponiveis = clientes || [];
+  const lista = document.getElementById('lista-clientes');
+  lista.innerHTML = clientesDisponiveis.map(c =>
+    `<option value="${escaparHtml(c.nome)} — ${escaparHtml(c.cnpj || '')}"></option>`
+  ).join('');
+}
+
+async function carregarFiltrosPostos() {
+  const { data: postos } = await supabaseClient.from('fila_descoberta_postos').select('id_posto, nome_fantasia_posto, razao_social_posto, cnpj_posto').order('nome_fantasia_posto').limit(14200);
+  postosDisponiveis = (postos || []).map(p => ({
+    id_api: p.id_posto,
+    nome: p.nome_fantasia_posto || p.razao_social_posto || '',
+    cnpj: p.cnpj_posto || '',
+    cidade: '',
+    uf: '',
+  }));
+  const lista = document.getElementById('lista-postos');
+  lista.innerHTML = postosDisponiveis.map(p =>
+    `<option value="${escaparHtml(p.nome)} — ${escaparHtml(p.cnpj || '')}"></option>`
+  ).join('');
+}
+
+// =====================================================================
+// DASHBOARD DE CLIENTES (mantido do sistema anterior)
+// =====================================================================
+document.getElementById('btn-buscar').addEventListener('click', buscarDados);
+
+async function buscarDados() {
+  const area = document.getElementById('area-resultado');
+  const detalhe = document.getElementById('area-detalhe-cliente');
+  detalhe.style.display = 'none';
+  area.style.display = 'block';
+  area.innerHTML = '<div class="carregando"><div class="spinner"></div>Buscando dados...</div>';
+  const dataInicio = formatarDataBR(document.getElementById('filtro-data-inicio').value);
+  const dataFim = formatarDataBR(document.getElementById('filtro-data-fim').value);
+  try {
+    const resp = await fetch(EDGE_FUNCTION_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + sessaoAtual.access_token },
+      body: JSON.stringify({ dataInicio, dataFim }),
+    });
+    const json = await resp.json();
+    if (!resp.ok) throw new Error(json.error || 'Erro na consulta');
+    let registros = json.registros || [];
+    const textoBusca = document.getElementById('filtro-cliente-busca').value;
+    if (perfilAtual.papel === 'staff' && textoBusca.trim()) {
+      const c = encontrarClientePorTextoBusca(textoBusca);
+      if (!c) { area.innerHTML = '<div class="estado-vazio"><p>Nenhum cliente encontrado</p></div>'; return; }
+      registros = registros.filter(r => normalizarCnpj(r.cliente?.cnpj) === normalizarCnpj(c.cnpj));
+    }
+    renderizarResultado(registros);
+  } catch (err) {
+    area.innerHTML = `<div class="estado-vazio"><p>Erro ao buscar: ${escaparHtml(err.message)}</p></div>`;
+  }
+}
+
+function encontrarClientePorTextoBusca(texto) {
+  if (!texto) return null;
+  const t = texto.trim().toLowerCase();
+  const cnpj = normalizarCnpj(texto);
+  return clientesDisponiveis.find(c => {
+    const composicao = `${c.nome} — ${c.cnpj || ''}`.toLowerCase();
+    return c.nome?.toLowerCase() === t || composicao === t || (cnpj.length >= 11 && normalizarCnpj(c.cnpj) === cnpj);
+  }) || clientesDisponiveis.find(c => c.nome?.toLowerCase().includes(t) || (cnpj.length >= 4 && normalizarCnpj(c.cnpj).includes(cnpj)));
+}
+
+function renderizarResultado(registros) {
+  const area = document.getElementById('area-resultado');
+  if (!registros || registros.length === 0) {
+    area.innerHTML = '<div class="estado-vazio"><div style="font-size:28px;">📭</div><p>Nenhum registro encontrado no período</p></div>';
+    return;
+  }
+  ultimosRegistrosBusca = registros;
+  renderizarTabelaResultado(registros, ordenacaoAtualResultado);
+}
+
+function renderizarTabelaResultado(registros, ordenacao) {
+  const area = document.getElementById('area-resultado');
+  const totalARecolher = registros.reduce((s, r) => s + (r.valorRecolher || 0), 0);
+  const totalRecolhido = registros.reduce((s, r) => s + (r.valorRecolhido || 0), 0);
+  const totalPendente = registros.reduce((s, r) => s + (r.valorPendente || 0), 0);
+  const pctGeral = calcularPct(totalRecolhido, totalARecolher);
+
+  let lista = [...registros];
+  if (ordenacao?.campo === 'pct') {
+    lista.sort((a, b) => {
+      const pA = calcularPct(a.valorRecolhido, a.valorRecolher);
+      const pB = calcularPct(b.valorRecolhido, b.valorRecolher);
+      return ordenacao.direcao === 'asc' ? pA - pB : pB - pA;
+    });
+  }
+
+  area.innerHTML = `
+    <div class="grid-kpi">
+      <div class="kpi"><div class="rotulo">Clientes</div><div class="valor">${registros.length}</div></div>
+      <div class="kpi"><div class="rotulo">Recolhido</div><div class="valor verde">${formatarMoeda(totalRecolhido)}</div></div>
+      <div class="kpi"><div class="rotulo">Pendente</div><div class="valor terracota">${formatarMoeda(totalPendente)}</div></div>
+      <div class="kpi">
+        <div class="rotulo">% recolhimento</div>
+        <div class="valor">${pctGeral}%</div>
+        <div class="barra-progresso"><div class="seg-recolhido" style="width:${pctGeral}%"></div><div class="seg-pendente" style="width:${100-pctGeral}%"></div></div>
+      </div>
+    </div>
+    <div class="painel">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px;">
+        <h3 style="margin-bottom:0;">Recolhimento por cliente</h3>
+        <button class="botao-acao secundario" id="btn-exportar-csv">⬇ Exportar CSV</button>
+      </div>
+      <div style="overflow-x:auto;">
+        <table>
+          <thead><tr>
+            <th>Cliente</th><th>Meta</th><th>Total</th><th>Recolhido</th><th>Pendente</th>
+            <th style="cursor:pointer;" id="th-pct">% recolhido ${ordenacao?.campo==='pct'?(ordenacao.direcao==='asc'?'↑':'↓'):'⇅'}</th>
+          </tr></thead>
+          <tbody>
+            ${lista.map(r => {
+              const c = r.cliente || {};
+              const pct = calcularPct(r.valorRecolhido, r.valorRecolher);
+              const meta = c.percentualRecolhaNegociado != null ? Math.round(c.percentualRecolhaNegociado) : null;
+              const abaixo = meta != null && pct < meta;
+              const cad = clientesDisponiveis.find(cd => normalizarCnpj(cd.cnpj) === normalizarCnpj(c.cnpj));
+              const estrela = cad ? `<button class="estrela-favorito ${favoritosIds.has(cad.id)?'ativa':''}" data-id="${cad.id}" title="Favoritar">${favoritosIds.has(cad.id)?'★':'☆'}</button> ` : '';
+              return `<tr>
+                <td>${estrela}<a href="#" class="link-cliente" data-cnpj="${escaparHtml(c.cnpj||'')}" data-nome="${escaparHtml(c.nomeFantasia||c.razaoSocial||'-')}" style="color:var(--accent);text-decoration:none;font-weight:600;">${escaparHtml(c.nomeFantasia||c.razaoSocial||'-')}</a></td>
+                <td>${meta!=null?meta+'%':'-'}</td>
+                <td>${formatarMoeda(r.valorTotal)}</td>
+                <td>${formatarMoeda(r.valorRecolhido)}</td>
+                <td>${formatarMoeda(r.valorPendente)}</td>
+                <td><span class="badge ${abaixo?'terracota':'verde'}">${pct}%</span></td>
+              </tr>`;
+            }).join('')}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  `;
+
+  document.getElementById('th-pct').addEventListener('click', () => {
+    ordenacaoAtualResultado = { campo: 'pct', direcao: ordenacaoAtualResultado?.direcao === 'asc' ? 'desc' : 'asc' };
+    renderizarTabelaResultado(ultimosRegistrosBusca, ordenacaoAtualResultado);
+  });
+  document.getElementById('btn-exportar-csv').addEventListener('click', () => exportarCsv(lista));
+  document.querySelectorAll('.link-cliente').forEach(a => a.addEventListener('click', e => { e.preventDefault(); abrirDetalheCliente(a.dataset.cnpj, a.dataset.nome); }));
+  document.querySelectorAll('.estrela-favorito').forEach(b => b.addEventListener('click', e => { e.stopPropagation(); alternarFavorito(b.dataset.id); }));
+}
+
+// =====================================================================
+// CONSULTA DE POSTOS
+// =====================================================================
+document.getElementById('btn-buscar-posto').addEventListener('click', buscarPosto);
+
+async function buscarPosto() {
+  const area = document.getElementById('area-resultado-posto');
+  const textoBusca = document.getElementById('posto-busca').value.trim();
+  if (!textoBusca) { area.innerHTML = '<div class="estado-vazio"><p>Digite o nome ou CNPJ do posto</p></div>'; return; }
+
+  // Encontrar o posto na lista local
+  const postoEncontrado = encontrarPostoPorTexto(textoBusca);
+  if (!postoEncontrado) {
+    area.innerHTML = '<div class="estado-vazio"><p>Posto não encontrado. Verifique o nome ou CNPJ.</p></div>';
+    return;
+  }
+
+  area.innerHTML = '<div class="carregando"><div class="spinner"></div>Consultando a API...</div>';
+
+  const dataInicio = formatarDataBR(document.getElementById('posto-data-inicio').value);
+  const dataFim = formatarDataBR(document.getElementById('posto-data-fim').value);
+
+  try {
+    const resp = await fetch(EDGE_FUNCTION_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + sessaoAtual.access_token },
+      body: JSON.stringify({ dataInicio, dataFim, postoId: postoEncontrado.id_api }),
+    });
+    const json = await resp.json();
+    if (!resp.ok) throw new Error(json.error || 'Erro na consulta');
+    renderizarResultadoPosto(postoEncontrado, json.registros || [], json.totais, dataInicio, dataFim);
+  } catch (err) {
+    area.innerHTML = `<div class="estado-vazio"><p>Erro ao consultar: ${escaparHtml(err.message)}</p></div>`;
+  }
+}
+
+function encontrarPostoPorTexto(texto) {
+  const t = texto.trim().toLowerCase();
+  const cnpj = normalizarCnpj(texto);
+  return postosDisponiveis.find(p => {
+    const composicao = `${p.nome} — ${p.cnpj || ''}`.toLowerCase();
+    return p.nome?.toLowerCase() === t || composicao === t || (cnpj.length >= 11 && normalizarCnpj(p.cnpj) === cnpj);
+  }) || postosDisponiveis.find(p =>
+    p.nome?.toLowerCase().includes(t) || (cnpj.length >= 4 && normalizarCnpj(p.cnpj).includes(cnpj))
+  );
+}
+
+async function renderizarResultadoPosto(posto, clientes, totais, dataInicio, dataFim) {
+  const area = document.getElementById('area-resultado-posto');
+
+  if (!clientes || clientes.length === 0) {
+    area.innerHTML = `
+      <div class="resultado-posto">
+        <div class="posto-cabecalho">
+          <h3>${escaparHtml(posto.nome)}</h3>
+          <p>CNPJ: ${escaparHtml(posto.cnpj || '-')} · ${escaparHtml(posto.cidade||'')} ${escaparHtml(posto.uf||'')}</p>
+        </div>
+      </div>
+      <div class="estado-vazio"><p>Nenhum cliente encontrado neste posto para o período selecionado</p></div>
+    `;
+    return;
+  }
+
+  // Buscar atividades já registradas para esse posto+período
+  const { data: atividadesExistentes } = await supabaseClient
+    .from('atividades_posto')
+    .select('*')
+    .eq('posto_id_api', posto.id_api);
+
+  const mapaAtividades = {};
+  (atividadesExistentes || []).forEach(a => {
+    mapaAtividades[normalizarCnpj(a.cliente_cnpj)] = a;
+  });
+
+  const totalRecolhido = clientes.reduce((s, r) => s + (r.valorRecolhido || 0), 0);
+  const totalARecolher = clientes.reduce((s, r) => s + (r.valorRecolher || 0), 0);
+  const pctGeral = calcularPct(totalRecolhido, totalARecolher);
+
+  area.innerHTML = `
+    <div class="resultado-posto">
+      <div class="posto-cabecalho">
+        <h3>${escaparHtml(posto.nome)}</h3>
+        <p>CNPJ: ${escaparHtml(posto.cnpj || '-')} · ${escaparHtml(posto.cidade||'')} ${escaparHtml(posto.uf||'')} · ID: ${posto.id_api}</p>
+      </div>
+    </div>
+    <div class="grid-kpi">
+      <div class="kpi"><div class="rotulo">Clientes neste posto</div><div class="valor">${clientes.length}</div></div>
+      <div class="kpi"><div class="rotulo">Valor total</div><div class="valor">${formatarMoeda(clientes.reduce((s,r)=>s+(r.valorTotal||0),0))}</div></div>
+      <div class="kpi"><div class="rotulo">Recolhido</div><div class="valor verde">${formatarMoeda(totalRecolhido)}</div></div>
+      <div class="kpi"><div class="rotulo">Pendente</div><div class="valor terracota">${formatarMoeda(clientes.reduce((s,r)=>s+(r.valorPendente||0),0))}</div></div>
+      <div class="kpi">
+        <div class="rotulo">% recolhimento</div>
+        <div class="valor">${pctGeral}%</div>
+        <div class="barra-progresso"><div class="seg-recolhido" style="width:${pctGeral}%"></div><div class="seg-pendente" style="width:${100-pctGeral}%"></div></div>
+      </div>
+    </div>
+    <div class="painel">
+      <h3>Clientes encontrados neste posto</h3>
+      <div style="overflow-x:auto;">
+        <table>
+          <thead><tr>
+            <th>Cliente</th><th>CNPJ</th><th>Reconhecido?</th><th>Valor total</th><th>Recolhido</th><th>Pendente</th><th>% recolhido</th><th>Nota enviada</th><th>Status</th><th>Atividade</th>
+          </tr></thead>
+          <tbody id="tbody-clientes-posto">
+            ${clientes.map(r => {
+              const c = r.cliente || {};
+              const cnpjNorm = normalizarCnpj(c.cnpj);
+              const pct = calcularPct(r.valorRecolhido, r.valorRecolher);
+              const abaixo = c.percentualRecolhaNegociado != null && pct < c.percentualRecolhaNegociado;
+              const ativ = mapaAtividades[cnpjNorm];
+              const reconhecido = clientesDisponiveis.some(cd => normalizarCnpj(cd.cnpj) === cnpjNorm);
+              return `<tr data-cnpj="${escaparHtml(c.cnpj||'')}" data-nome="${escaparHtml(c.nomeFantasia||c.razaoSocial||'-')}">
+                <td style="font-weight:600;">${escaparHtml(c.nomeFantasia||c.razaoSocial||'-')}</td>
+                <td style="font-family:monospace;font-size:12px;">${escaparHtml(c.cnpj||'-')}</td>
+                <td><span class="badge ${reconhecido?'verde':'cinza'}">${reconhecido?'Sim':'Não'}</span></td>
+                <td>${formatarMoeda(r.valorTotal)}</td>
+                <td>${formatarMoeda(r.valorRecolhido)}</td>
+                <td>${formatarMoeda(r.valorPendente)}</td>
+                <td><span class="badge ${abaixo?'terracota':'verde'}">${pct}%</span></td>
+                <td>${ativ ? (ativ.nota_enviada ? '<span class="badge verde">✓ Sim</span>' : '<span class="badge cinza">Não</span>') : '<span style="color:var(--ink-faint);">—</span>'}</td>
+                <td>${ativ ? badgeStatus(ativ.status) : '<span style="color:var(--ink-faint);">—</span>'}</td>
+                <td>
+                  <button class="botao-acao btn-atividade" 
+                    data-posto-id="${posto.id_api}"
+                    data-cnpj="${escaparHtml(c.cnpj||'')}"
+                    data-nome="${escaparHtml(c.nomeFantasia||c.razaoSocial||'-')}"
+                    data-periodo-inicio="${dataInicio}"
+                    data-periodo-fim="${dataFim}"
+                    data-ativ-id="${ativ?.id||''}"
+                    data-nota="${ativ?.nota_enviada?'true':'false'}"
+                    data-status="${ativ?.status||'pendente'}"
+                    data-obs="${escaparHtml(ativ?.observacao||'')}">
+                    ${ativ ? '✏️ Editar' : '+ Registrar'}
+                  </button>
+                </td>
+              </tr>`;
+            }).join('')}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  `;
+
+  document.querySelectorAll('.btn-atividade').forEach(btn => {
+    btn.addEventListener('click', () => abrirModalAtividade(btn));
+  });
+}
+
+function badgeStatus(status) {
+  const map = {
+    pendente: ['cinza', '⏳ Pendente'],
+    em_contato: ['azul', '📞 Em contato'],
+    resolvido: ['verde', '✅ Resolvido'],
+    sem_retorno: ['terracota', '🚫 Sem retorno'],
+  };
+  const [classe, label] = map[status] || ['cinza', status];
+  return `<span class="badge ${classe}">${label}</span>`;
+}
+
+// =====================================================================
+// MODAL DE ATIVIDADE
+// =====================================================================
+function abrirModalAtividade(btn) {
+  modalAtividade = {
+    postoIdApi: parseInt(btn.dataset.postoId),
+    clienteCnpj: btn.dataset.cnpj,
+    clienteNome: btn.dataset.nome,
+    periodoInicio: btn.dataset.periodoInicio,
+    periodoFim: btn.dataset.periodoFim,
+    id: btn.dataset.ativId || null,
+  };
+
+  document.getElementById('modal-titulo').textContent = btn.dataset.ativId ? 'Editar atividade' : 'Registrar atividade';
+  document.getElementById('modal-sub').textContent = btn.dataset.nome;
+  document.getElementById('ativ-nota-enviada').checked = btn.dataset.nota === 'true';
+  document.getElementById('ativ-status').value = btn.dataset.status || 'pendente';
+  document.getElementById('ativ-observacao').value = btn.dataset.obs || '';
+  document.getElementById('modal-atividade').style.display = 'flex';
+}
+
+document.getElementById('modal-cancelar').addEventListener('click', () => {
+  document.getElementById('modal-atividade').style.display = 'none';
+});
+document.getElementById('modal-atividade').addEventListener('click', (e) => {
+  if (e.target === document.getElementById('modal-atividade')) document.getElementById('modal-atividade').style.display = 'none';
+});
+
+document.getElementById('modal-salvar').addEventListener('click', async () => {
+  const btn = document.getElementById('modal-salvar');
+  btn.disabled = true; btn.textContent = 'Salvando...';
+
+  const dados = {
+    posto_id_api: modalAtividade.postoIdApi,
+    cliente_cnpj: modalAtividade.clienteCnpj,
+    cliente_nome: modalAtividade.clienteNome,
+    periodo_inicio: converterDataBRparaISO(modalAtividade.periodoInicio),
+    periodo_fim: converterDataBRparaISO(modalAtividade.periodoFim),
+    analista_id: sessaoAtual.user.id,
+    analista_nome: perfilAtual.nome || sessaoAtual.user.email,
+    nota_enviada: document.getElementById('ativ-nota-enviada').checked,
+    status: document.getElementById('ativ-status').value,
+    observacao: document.getElementById('ativ-observacao').value.trim(),
+  };
+
+  let erro;
+  if (modalAtividade.id) {
+    const { error } = await supabaseClient.from('atividades_posto').update(dados).eq('id', modalAtividade.id);
+    erro = error;
+  } else {
+    const { error } = await supabaseClient.from('atividades_posto').insert(dados);
+    erro = error;
+  }
+
+  btn.disabled = false; btn.textContent = 'Salvar atividade';
+
+  if (erro) {
+    alert('Erro ao salvar: ' + erro.message);
+    return;
+  }
+
+  document.getElementById('modal-atividade').style.display = 'none';
+  // Re-executar a busca para atualizar a tabela
+  await buscarPosto();
+});
+
+// =====================================================================
+// VISÃO INICIAL (totais globais + favoritos)
+// =====================================================================
+async function carregarVisaoInicial() {
+  const areaFav = document.getElementById('area-favoritos');
+  const areaTotais = document.getElementById('area-totais-globais');
+  areaTotais.innerHTML = '<div class="carregando"><div class="spinner"></div>Carregando visão geral...</div>';
+  if (favoritosIds.size > 0) areaFav.innerHTML = '<div class="carregando"><div class="spinner"></div>Carregando favoritos...</div>';
+
+  const hoje = new Date();
+  const inicioMes = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
+  const fimMesAnt = new Date(hoje.getFullYear(), hoje.getMonth() - 1, hoje.getDate());
+  const inicioMesAnt = new Date(hoje.getFullYear(), hoje.getMonth() - 1, 1);
+
+  try {
+    const [rAtual, rAnt] = await Promise.all([
+      fetch(EDGE_FUNCTION_URL, { method:'POST', headers:{'Content-Type':'application/json','Authorization':'Bearer '+sessaoAtual.access_token}, body: JSON.stringify({ dataInicio: formatarDataParaAPI(inicioMes), dataFim: formatarDataParaAPI(hoje) }) }),
+      fetch(EDGE_FUNCTION_URL, { method:'POST', headers:{'Content-Type':'application/json','Authorization':'Bearer '+sessaoAtual.access_token}, body: JSON.stringify({ dataInicio: formatarDataParaAPI(inicioMesAnt), dataFim: formatarDataParaAPI(fimMesAnt) }) }),
+    ]);
+    const jAtual = await rAtual.json();
+    const jAnt = await rAnt.json();
+    ultimosRegistrosVisaoInicial = jAtual.registros || [];
+    ultimaAtualizacaoVisaoInicial = new Date();
+    renderizarTotaisGlobais(ultimosRegistrosVisaoInicial, jAnt.registros || []);
+    renderizarCardsFavoritos(ultimosRegistrosVisaoInicial);
+  } catch { areaTotais.innerHTML = ''; areaFav.innerHTML = ''; }
+}
+
+function renderizarTotaisGlobais(registros, regAnt) {
+  const area = document.getElementById('area-totais-globais');
+  if (!registros?.length) { area.innerHTML = ''; return; }
+
+  const soma = (campo) => registros.reduce((s,r) => s+(r[campo]||0), 0);
+  const tTotal = soma('valorTotal'), tRecolher = soma('valorRecolher'), tRecolhido = soma('valorRecolhido');
+  const tPendente = soma('valorPendente'), tPausado = soma('valorPausado'), tProblema = soma('valorProblemaRecolha');
+  const pctR = calcularPct(tRecolhido, tRecolher);
+  const pctP = calcularPct(tPendente, tRecolher);
+  const pctPaus = calcularPct(tPausado, tTotal);
+  const pctProb = calcularPct(tProblema, tTotal);
+
+  let tendencia = '';
+  if (regAnt?.length) {
+    const rARecolherAnt = regAnt.reduce((s,r)=>s+(r.valorRecolher||0),0);
+    const rRecolhidoAnt = regAnt.reduce((s,r)=>s+(r.valorRecolhido||0),0);
+    const pctAnt = calcularPct(rRecolhidoAnt, rARecolherAnt);
+    const diff = Math.round((pctR - pctAnt)*10)/10;
+    if (diff !== 0) {
+      const cor = diff > 0 ? 'var(--green)' : 'var(--terracota)';
+      tendencia = ` · <span style="color:${cor};font-weight:600;">${diff>0?'↑':'↓'} ${Math.abs(diff)}pts vs mês anterior</span>`;
+    }
+  }
+
+  const abaixoDaMeta = registros.filter(r => {
+    const meta = r.cliente?.percentualRecolhaNegociado;
+    return meta != null && calcularPct(r.valorRecolhido, r.valorRecolher) < meta;
+  }).length;
+
+  area.innerHTML = `
+    <div class="painel" style="padding:16px 20px;">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:10px;margin-bottom:14px;">
+        <div>
+          <h3 style="font-size:14px;margin-bottom:4px;">Visão consolidada — todos os clientes (mês atual)</h3>
+          <p style="font-size:12px;color:var(--ink-faint);">Atualizado às ${formatarHorario(ultimaAtualizacaoVisaoInicial)}${abaixoDaMeta > 0 ? ` · <span style="color:var(--terracota);font-weight:600;">${abaixoDaMeta} cliente(s) abaixo da meta</span>` : ''}</p>
+        </div>
+        <button class="botao-acao secundario" id="btn-atualizar-visao" style="font-size:12px;padding:5px 10px;">↻ Atualizar</button>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;">
+        <div class="kpi"><div class="rotulo">Transacionado</div><div class="valor" title="${formatarMoeda(tTotal)}">${formatarMoedaCompacta(tTotal)}</div></div>
+        <div class="kpi">
+          <div class="rotulo">Recolhido</div>
+          <div class="valor verde" style="font-size:22px;">${pctR}%</div>
+          <div class="sub-valor" title="${formatarMoeda(tRecolhido)}">${formatarMoedaCompacta(tRecolhido)}</div>
+          <div class="barra-progresso"><div class="seg-recolhido" style="width:${pctR}%"></div></div>
+          ${tendencia ? `<div style="font-size:10px;margin-top:4px;">${tendencia}</div>` : ''}
+        </div>
+        <div class="kpi">
+          <div class="rotulo">Pendente</div>
+          <div class="valor terracota" style="font-size:22px;">${pctP}%</div>
+          <div class="sub-valor" title="${formatarMoeda(tPendente)}">${formatarMoedaCompacta(tPendente)}</div>
+          <div class="barra-progresso"><div class="seg-pendente" style="width:${pctP}%"></div></div>
+        </div>
+        <div class="kpi"><div class="rotulo">A recolher</div><div class="valor" title="${formatarMoeda(tRecolher)}">${formatarMoedaCompacta(tRecolher)}</div></div>
+        <div class="kpi"><div class="rotulo">Pausado</div><div class="valor" style="font-size:18px;">${pctPaus}%</div><div class="sub-valor" title="${formatarMoeda(tPausado)}">${formatarMoedaCompacta(tPausado)}</div></div>
+        <div class="kpi"><div class="rotulo">Problemas</div><div class="valor terracota" style="font-size:18px;">${pctProb}%</div><div class="sub-valor" title="${formatarMoeda(tProblema)}">${formatarMoedaCompacta(tProblema)}</div></div>
+      </div>
+      <p style="font-size:11px;color:var(--ink-faint);margin-top:12px;">Baseado em ${registros.length} cliente(s) com movimento no mês atual.</p>
+    </div>
+  `;
+
+  document.getElementById('btn-atualizar-visao').addEventListener('click', async () => {
+    document.getElementById('btn-atualizar-visao').textContent = '↻ Atualizando...';
+    await carregarVisaoInicial();
+  });
+}
+
+function renderizarCardsFavoritos(registros) {
+  const area = document.getElementById('area-favoritos');
+  if (favoritosIds.size === 0) { area.innerHTML = ''; return; }
+  const favs = clientesDisponiveis.filter(c => favoritosIds.has(c.id));
+  if (!favs.length) { area.innerHTML = ''; return; }
+  const cards = favs.map(c => {
+    const cnpjN = normalizarCnpj(c.cnpj);
+    const r = (registros||[]).find(x => normalizarCnpj(x.cliente?.cnpj) === cnpjN);
+    const pct = calcularPct(r?.valorRecolhido, r?.valorRecolher);
+    const meta = r?.cliente?.percentualRecolhaNegociado;
+    const abaixo = meta != null && pct < meta;
+    return `<div class="card-favorito" data-cnpj="${escaparHtml(c.cnpj||'')}" data-nome="${escaparHtml(c.nome)}" style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:14px 16px;cursor:pointer;transition:border-color .15s;">
+      <div style="font-size:13px;font-weight:600;margin-bottom:8px;line-height:1.3;">${escaparHtml(c.nome)}</div>
+      <div style="font-size:20px;font-weight:700;letter-spacing:-0.02em;color:${abaixo?'var(--terracota)':'var(--green)'};">${r ? pct+'%' : '—'}</div>
+      ${r ? `<div class="barra-progresso" style="margin-top:6px;"><div class="seg-recolhido" style="width:${pct}%"></div><div class="seg-pendente" style="width:${100-pct}%"></div></div>` : ''}
+    </div>`;
+  }).join('');
+  area.innerHTML = `<div class="painel" style="margin-bottom:24px;"><h3>★ Favoritos — mês atual</h3><div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;">${cards}</div></div>`;
+  document.querySelectorAll('.card-favorito').forEach(c => c.addEventListener('click', () => abrirDetalheCliente(c.dataset.cnpj, c.dataset.nome)));
+}
+
+async function alternarFavorito(clienteId) {
+  if (favoritosIds.has(clienteId)) {
+    await supabaseClient.from('favoritos').delete().eq('usuario_id', sessaoAtual.user.id).eq('cliente_id', clienteId);
+    favoritosIds.delete(clienteId);
+  } else {
+    await supabaseClient.from('favoritos').insert({ usuario_id: sessaoAtual.user.id, cliente_id: clienteId });
+    favoritosIds.add(clienteId);
+  }
+  document.querySelectorAll(`.estrela-favorito[data-id="${clienteId}"]`).forEach(el => {
+    el.classList.toggle('ativa', favoritosIds.has(clienteId));
+    el.textContent = favoritosIds.has(clienteId) ? '★' : '☆';
+  });
+  renderizarCardsFavoritos(ultimosRegistrosVisaoInicial || []);
+}
+
+// =====================================================================
+// DETALHE DO CLIENTE (evolução mensal)
+// =====================================================================
+async function abrirDetalheCliente(cnpj, nome) {
+  const area = document.getElementById('area-resultado');
+  const detalhe = document.getElementById('area-detalhe-cliente');
+  area.style.display = 'none';
+  detalhe.style.display = 'block';
+  detalhe.innerHTML = `<a href="#" class="botao-acao secundario" id="btn-voltar" style="margin-bottom:20px;display:inline-flex;">← Voltar para visão geral</a><div class="carregando"><div class="spinner"></div>Carregando evolução mensal...</div>`;
+  document.getElementById('btn-voltar').addEventListener('click', e => { e.preventDefault(); detalhe.style.display = 'none'; area.style.display = 'block'; });
+
+  const hoje = new Date();
+  const meses = [];
+  const nomes = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+  for (let m = 0; m <= hoje.getMonth(); m++) {
+    const ini = new Date(hoje.getFullYear(), m, 1);
+    const fim = new Date(Math.min(new Date(hoje.getFullYear(), m+1, 0), hoje));
+    meses.push({ label: nomes[m], dataInicio: formatarDataParaAPI(ini), dataFim: formatarDataParaAPI(fim) });
+  }
+
+  const cnpjLimpo = normalizarCnpj(cnpj);
+  try {
+    const respostas = await Promise.all(meses.map(async mes => {
+      const r = await fetch(EDGE_FUNCTION_URL, { method:'POST', headers:{'Content-Type':'application/json','Authorization':'Bearer '+sessaoAtual.access_token}, body: JSON.stringify({ dataInicio: mes.dataInicio, dataFim: mes.dataFim }) });
+      const j = await r.json();
+      const reg = (j.registros||[]).find(x => normalizarCnpj(x.cliente?.cnpj) === cnpjLimpo);
+      return { mes: mes.label, dados: reg || null };
+    }));
+
+    const linhas = respostas.map(r => ({
+      mes: r.mes,
+      total: r.dados?.valorTotal || 0,
+      recolhido: r.dados?.valorRecolhido || 0,
+      pendente: r.dados?.valorPendente || 0,
+      aRecolher: r.dados?.valorRecolher || 0,
+      pct: r.dados ? calcularPct(r.dados.valorRecolhido, r.dados.valorRecolher) : null,
+    }));
+
+    const tGeral = linhas.reduce((s,l)=>s+l.total,0);
+    const rGeral = linhas.reduce((s,l)=>s+l.recolhido,0);
+    const arGeral = linhas.reduce((s,l)=>s+l.aRecolher,0);
+    const pctG = calcularPct(rGeral, arGeral);
+
+    detalhe.innerHTML = `
+      <a href="#" class="botao-acao secundario" id="btn-voltar" style="margin-bottom:20px;display:inline-flex;">← Voltar</a>
+      <h2 style="font-size:20px;font-weight:600;margin-bottom:4px;">${escaparHtml(nome)}</h2>
+      <p style="font-size:13px;color:var(--ink-soft);margin-bottom:24px;">Evolução mensal — ${hoje.getFullYear()}</p>
+      <div class="grid-kpi">
+        <div class="kpi"><div class="rotulo">Total no ano</div><div class="valor">${formatarMoeda(tGeral)}</div></div>
+        <div class="kpi"><div class="rotulo">Recolhido no ano</div><div class="valor verde">${formatarMoeda(rGeral)}</div></div>
+        <div class="kpi"><div class="rotulo">% no ano</div><div class="valor">${pctG}%</div></div>
+      </div>
+      <div class="painel">
+        <h3>Evolução mensal</h3>
+        <div style="position:relative;height:260px;"><canvas id="grafico-evolucao"></canvas></div>
+      </div>
+      <div class="painel">
+        <h3>Detalhe por mês</h3>
+        <table>
+          <thead><tr><th>Mês</th><th>Valor total</th><th>Recolhido</th><th>Pendente</th><th>% recolhido</th></tr></thead>
+          <tbody>
+            ${linhas.map(l=>`<tr>
+              <td>${l.mes}</td>
+              <td>${formatarMoeda(l.total)}</td>
+              <td>${formatarMoeda(l.recolhido)}</td>
+              <td>${formatarMoeda(l.pendente)}</td>
+              <td>${l.pct!=null?`<span class="badge ${l.pct>=80?'verde':'terracota'}">${l.pct}%</span>`:'<span style="color:var(--ink-faint);">sem dados</span>'}</td>
+            </tr>`).join('')}
+          </tbody>
+        </table>
+      </div>
+    `;
+
+    document.getElementById('btn-voltar').addEventListener('click', e => { e.preventDefault(); detalhe.style.display='none'; area.style.display='block'; });
+
+    if (graficoEvolucao) graficoEvolucao.destroy();
+    graficoEvolucao = new Chart(document.getElementById('grafico-evolucao'), {
+      type:'line',
+      data:{ labels:linhas.map(l=>l.mes.substring(0,3)), datasets:[{ label:'% recolhido', data:linhas.map(l=>l.pct), borderColor:'#1B4D4A', backgroundColor:'rgba(27,77,74,.1)', fill:true, tension:0.3, spanGaps:true }] },
+      options:{ plugins:{legend:{display:false}}, scales:{ y:{beginAtZero:true,max:100,ticks:{callback:v=>v+'%'}} } }
+    });
+  } catch (err) {
+    detalhe.innerHTML = `<a href="#" class="botao-acao secundario" id="btn-voltar">← Voltar</a><div class="estado-vazio"><p>Erro ao carregar: ${escaparHtml(err.message)}</p></div>`;
+    document.getElementById('btn-voltar').addEventListener('click', e => { e.preventDefault(); detalhe.style.display='none'; area.style.display='block'; });
+  }
+}
+
+// =====================================================================
+// ADMINISTRAÇÃO
+// =====================================================================
+async function carregarAdm() {
+  const areaUsuarios = document.getElementById('area-usuarios');
+  const areaResumo = document.getElementById('area-resumo-adm');
+
+  const [{ data: perfis }, { count: totalClientes }, { count: totalPostos }] = await Promise.all([
+    supabaseClient.from('perfis').select('id, papel, nome, criado_em'),
+    supabaseClient.from('clientes').select('*', { count:'exact', head:true }),
+    supabaseClient.from('postos_consulta').select('*', { count:'exact', head:true }),
+  ]);
+
+  areaUsuarios.innerHTML = perfis?.length ? `
+    <table>
+      <thead><tr><th>Nome / E-mail</th><th>Papel</th><th>Cadastrado em</th></tr></thead>
+      <tbody>${(perfis||[]).map(p=>`<tr>
+        <td>${escaparHtml(p.nome||'—')}</td>
+        <td><span class="badge ${p.papel==='staff'?'azul':'cinza'}">${p.papel}</span></td>
+        <td style="color:var(--ink-soft);font-size:12px;">${new Date(p.criado_em).toLocaleDateString('pt-BR')}</td>
+      </tr>`).join('')}</tbody>
+    </table>` : '<p style="color:var(--ink-faint);">Nenhum usuário encontrado</p>';
+
+  areaResumo.innerHTML = `
+    <div class="grid-kpi">
+      <div class="kpi"><div class="rotulo">Clientes cadastrados</div><div class="valor">${totalClientes||0}</div></div>
+      <div class="kpi"><div class="rotulo">Postos na base</div><div class="valor">${totalPostos||0}</div></div>
+      <div class="kpi"><div class="rotulo">Usuários ativos</div><div class="valor">${perfis?.length||0}</div></div>
+    </div>`;
+}
+
+// =====================================================================
+// UTILITÁRIOS
+// =====================================================================
+function normalizarCnpj(v) { return (v||'').toString().replace(/[^0-9]/g,''); }
+function calcularPct(num, den) { if (!den) return 0; return Math.round((num/den)*10000)/100; }
+function formatarMoeda(v) { return 'R$ '+(Number(v)||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2}); }
+function formatarMoedaCompacta(v) {
+  v = Number(v)||0;
+  if (Math.abs(v)>=1000000) return 'R$ '+(v/1000000).toLocaleString('pt-BR',{minimumFractionDigits:1,maximumFractionDigits:1})+'M';
+  if (Math.abs(v)>=1000) return 'R$ '+(v/1000).toLocaleString('pt-BR',{minimumFractionDigits:1,maximumFractionDigits:1})+'mil';
+  return formatarMoeda(v);
+}
+function formatarDataBR(iso) { const [a,m,d]=iso.split('-'); return `${d}/${m}/${a}`; }
+function formatarDataParaAPI(date) { const d=String(date.getDate()).padStart(2,'0'),m=String(date.getMonth()+1).padStart(2,'0'),a=date.getFullYear(); return `${d}/${m}/${a}`; }
+function converterDataBRparaISO(br) { const [d,m,a]=br.split('/'); return `${a}-${m}-${d}`; }
+function formatarHorario(date) { if (!date) return ''; return date.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}); }
+function escaparHtml(s) { const d=document.createElement('div');d.textContent=s||'';return d.innerHTML; }
+
+function exportarCsv(registros) {
+  const linhas=[['Cliente','CNPJ','Meta (%)','Total','A recolher','Recolhido','Pendente','% recolhido']];
+  registros.forEach(r=>{
+    const c=r.cliente||{};
+    linhas.push([c.nomeFantasia||c.razaoSocial||'-',c.cnpj||'',c.percentualRecolhaNegociado||'',
+      (r.valorTotal||0).toFixed(2).replace('.',','),(r.valorRecolher||0).toFixed(2).replace('.',','),
+      (r.valorRecolhido||0).toFixed(2).replace('.',','),(r.valorPendente||0).toFixed(2).replace('.',','),
+      calcularPct(r.valorRecolhido,r.valorRecolher)]);
+  });
+  const csv=linhas.map(l=>l.map(c=>`"${String(c).replace(/"/g,'""')}"`).join(';')).join('\r\n');
+  const blob=new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8;'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`recolhimento_${new Date().toISOString().slice(0,10)}.csv`;document.body.appendChild(a);a.click();document.body.removeChild(a);
+}
+</script>
+</body>
+</html>
