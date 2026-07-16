@@ -431,17 +431,58 @@ async function carregarFiltrosClientes() {
 }
 
 async function carregarFiltrosPostos() {
-  const { data: postos } = await supabaseClient.from('fila_descoberta_postos').select('id_posto, nome_fantasia_posto, razao_social_posto, cnpj_posto').order('nome_fantasia_posto').limit(14200);
-  postosDisponiveis = (postos || []).map(p => ({
+  // Não carrega tudo de uma vez — busca dinamicamente conforme o usuário digita
+  // Isso evita travar o navegador com 14 mil opções no datalist
+  const input = document.getElementById('posto-busca');
+  let timer = null;
+
+  input.addEventListener('input', async () => {
+    clearTimeout(timer);
+    const texto = input.value.trim();
+    if (texto.length < 3) {
+      document.getElementById('lista-postos').innerHTML = '';
+      return;
+    }
+    timer = setTimeout(async () => {
+      await buscarPostosPorTexto(texto);
+    }, 300);
+  });
+}
+
+async function buscarPostosPorTexto(texto) {
+  const cnpjLimpo = texto.replace(/[^0-9]/g, '');
+  let query = supabaseClient
+    .from('fila_descoberta_postos')
+    .select('id_posto, nome_fantasia_posto, razao_social_posto, cnpj_posto')
+    .limit(20);
+
+  if (cnpjLimpo.length >= 8) {
+    query = query.ilike('cnpj_posto', `%${cnpjLimpo}%`);
+  } else {
+    query = query.or(`nome_fantasia_posto.ilike.%${texto}%,razao_social_posto.ilike.%${texto}%`);
+  }
+
+  const { data: postos, error } = await query;
+
+  if (error) {
+    console.error('Erro ao buscar postos:', error.message);
+    return;
+  }
+
+  const resultados = (postos || []).map(p => ({
     id_api: p.id_posto,
     nome: p.nome_fantasia_posto || p.razao_social_posto || '',
     cnpj: p.cnpj_posto || '',
     cidade: '',
     uf: '',
   }));
+
+  // Atualiza a lista de postos disponíveis com o resultado atual
+  postosDisponiveis = resultados;
+
   const lista = document.getElementById('lista-postos');
-  lista.innerHTML = postosDisponiveis.map(p =>
-    `<option value="${escaparHtml(p.nome)} — ${escaparHtml(p.cnpj || '')}"></option>`
+  lista.innerHTML = resultados.map(p =>
+    `<option value="${escaparHtml(p.nome)} — ${escaparHtml(p.cnpj)}"></option>`
   ).join('');
 }
 
@@ -579,10 +620,17 @@ async function buscarPosto() {
   const textoBusca = document.getElementById('posto-busca').value.trim();
   if (!textoBusca) { area.innerHTML = '<div class="estado-vazio"><p>Digite o nome ou CNPJ do posto</p></div>'; return; }
 
-  // Encontrar o posto na lista local
-  const postoEncontrado = encontrarPostoPorTexto(textoBusca);
+  area.innerHTML = '<div class="carregando"><div class="spinner"></div>Localizando posto...</div>';
+
+  // Busca no banco se não estiver na lista local
+  let postoEncontrado = encontrarPostoPorTexto(textoBusca);
   if (!postoEncontrado) {
-    area.innerHTML = '<div class="estado-vazio"><p>Posto não encontrado. Verifique o nome ou CNPJ.</p></div>';
+    await buscarPostosPorTexto(textoBusca);
+    postoEncontrado = encontrarPostoPorTexto(textoBusca);
+  }
+
+  if (!postoEncontrado) {
+    area.innerHTML = '<div class="estado-vazio"><div style="font-size:28px;">🔍</div><p>Posto não encontrado. Tente usar parte do nome ou o CNPJ.</p></div>';
     return;
   }
 
