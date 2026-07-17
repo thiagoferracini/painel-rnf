@@ -294,8 +294,19 @@ tr:hover td{background:var(--gray-soft);}
       <option value="resolvido">✅ Resolvido</option>
       <option value="sem_retorno">🚫 Sem retorno</option>
     </select>
-    <label>Observação</label>
-    <textarea id="ativ-observacao" placeholder="Descreva o contato, próximos passos, etc."></textarea>
+    <label>Justificativa</label>
+    <select id="ativ-justificativa" style="margin-bottom:16px;">
+      <option value="">— Selecione uma justificativa —</option>
+      <option value="Motorista não solicitou NF, no ato do abastecimento">Motorista não solicitou NF, no ato do abastecimento</option>
+      <option value="Estabelecimento não colaborativo">Estabelecimento não colaborativo</option>
+      <option value="Solicitação de arquivamento / Cupom Fiscal / CNPJ divergente">Solicitação de arquivamento / Cupom Fiscal / CNPJ divergente</option>
+      <option value="Contato desatualizado">Contato desatualizado</option>
+      <option value="Posto vendido, não emite NF retroativa">Posto vendido, não emite NF retroativa</option>
+      <option value="Não consta transação no estabelecimento para o cliente">Não consta transação no estabelecimento para o cliente</option>
+      <option value="Recolhido">Recolhido</option>
+    </select>
+    <label>Observação adicional <span style="color:var(--ink-faint);font-weight:400;">(opcional)</span></label>
+    <textarea id="ativ-observacao" placeholder="Detalhes complementares, próximos passos, etc."></textarea>
     <div class="modal-acoes">
       <button class="primario secundario" id="modal-cancelar" style="background:var(--gray-soft);color:var(--ink);width:auto;">Cancelar</button>
       <button class="primario" id="modal-salvar">Salvar atividade</button>
@@ -759,7 +770,10 @@ async function renderizarResultadoPosto(posto, clientes, totais, dataInicio, dat
                 <td>${ativ
                   ? (ativ.nota_enviada ? '<span class="badge verde">✓</span>' : '<span class="badge cinza">Não</span>')
                   : '<span style="color:var(--ink-faint);">—</span>'}</td>
-                <td>${ativ ? badgeStatus(ativ.status) : '<span style="color:var(--ink-faint);">—</span>'}</td>
+                <td>${ativ ? `
+                  ${badgeStatus(ativ.status)}
+                  ${ativ.observacao ? `<div style="font-size:11px;color:var(--ink-soft);margin-top:3px;max-width:200px;">${escaparHtml(ativ.observacao.split('\n---\n')[0])}</div>` : ''}
+                ` : '<span style="color:var(--ink-faint);">—</span>'}</td>
               </tr>`;
             }).join('')}
           </tbody>
@@ -801,7 +815,13 @@ function abrirModalAtividade(btn) {
   document.getElementById('modal-sub').textContent = btn.dataset.nome;
   document.getElementById('ativ-nota-enviada').checked = btn.dataset.nota === 'true';
   document.getElementById('ativ-status').value = btn.dataset.status || 'pendente';
-  document.getElementById('ativ-observacao').value = btn.dataset.obs || '';
+
+  // Separar justificativa de observação livre (separadas por '\n---\n')
+  const obsCompleta = btn.dataset.obs || '';
+  const partes = obsCompleta.split('\n---\n');
+  document.getElementById('ativ-justificativa').value = partes[0] || '';
+  document.getElementById('ativ-observacao').value = partes[1] || '';
+
   document.getElementById('modal-atividade').style.display = 'flex';
 }
 
@@ -826,7 +846,10 @@ document.getElementById('modal-salvar').addEventListener('click', async () => {
     analista_nome: perfilAtual.nome || sessaoAtual.user.email,
     nota_enviada: document.getElementById('ativ-nota-enviada').checked,
     status: document.getElementById('ativ-status').value,
-    observacao: document.getElementById('ativ-observacao').value.trim(),
+    observacao: [
+      document.getElementById('ativ-justificativa').value.trim(),
+      document.getElementById('ativ-observacao').value.trim(),
+    ].filter(Boolean).join('\n---\n'),
   };
 
   let erro;
