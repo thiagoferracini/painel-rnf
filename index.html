@@ -718,18 +718,16 @@ async function renderizarResultadoPosto(posto, clientes, totais, dataInicio, dat
       <div style="overflow-x:auto;">
         <table>
           <thead><tr>
+            <th style="width:36px;"></th>
             <th>Cliente</th>
-            <th>CNPJ</th>
             <th>Meta</th>
-            <th>Total</th>
             <th style="color:var(--green);">Recolhido</th>
             <th style="color:var(--terracota);">Pendente</th>
             <th>Pausado</th>
             <th>Problemas</th>
             <th>% recolhido</th>
-            <th>Nota enviada</th>
+            <th>Nota</th>
             <th>Status</th>
-            <th>Ação</th>
           </tr></thead>
           <tbody>
             ${clientes.map(r => {
@@ -739,35 +737,29 @@ async function renderizarResultadoPosto(posto, clientes, totais, dataInicio, dat
               const meta = c.percentualRecolhaNegociado;
               const abaixo = meta != null && pct < meta;
               const ativ = mapaAtividades[cnpjN];
+              const btnData = `data-posto-id="${posto.id_api}" data-cnpj="${escaparHtml(c.cnpj||'')}" data-nome="${escaparHtml(c.nomeFantasia||c.razaoSocial||'-')}" data-periodo-inicio="${dataInicio}" data-periodo-fim="${dataFim}" data-ativ-id="${ativ?.id||''}" data-nota="${ativ?.nota_enviada?'true':'false'}" data-status="${ativ?.status||'pendente'}" data-obs="${escaparHtml(ativ?.observacao||'')}"`;
               return `<tr>
-                <td style="font-weight:600;min-width:180px;">${escaparHtml(c.nomeFantasia||c.razaoSocial||'-')}</td>
-                <td style="font-family:monospace;font-size:11px;white-space:nowrap;">${escaparHtml(c.cnpj||'-')}</td>
-                <td style="white-space:nowrap;">${meta!=null?Math.round(meta)+'%':'—'}</td>
-                <td style="white-space:nowrap;">${formatarMoeda(r.valorTotal)}</td>
-                <td style="white-space:nowrap;color:var(--green);font-weight:600;">${formatarMoeda(r.valorRecolhido)}</td>
-                <td style="white-space:nowrap;color:var(--terracota);font-weight:600;">${formatarMoeda(r.valorPendente)}</td>
-                <td style="white-space:nowrap;">${formatarMoeda(r.valorPausado||0)}</td>
-                <td style="white-space:nowrap;">${formatarMoeda(r.valorProblemaRecolha||0)}</td>
-                <td><span class="badge ${abaixo?'terracota':'verde'}">${pct}%</span></td>
-                <td>${ativ
-                  ? (ativ.nota_enviada ? '<span class="badge verde">✓ Sim</span>' : '<span class="badge cinza">Não</span>')
-                  : '<span style="color:var(--ink-faint);">—</span>'}</td>
-                <td>${ativ ? badgeStatus(ativ.status) : '<span style="color:var(--ink-faint);">—</span>'}</td>
                 <td>
-                  <button class="botao-acao btn-atividade"
-                    style="white-space:nowrap;"
-                    data-posto-id="${posto.id_api}"
-                    data-cnpj="${escaparHtml(c.cnpj||'')}"
-                    data-nome="${escaparHtml(c.nomeFantasia||c.razaoSocial||'-')}"
-                    data-periodo-inicio="${dataInicio}"
-                    data-periodo-fim="${dataFim}"
-                    data-ativ-id="${ativ?.id||''}"
-                    data-nota="${ativ?.nota_enviada?'true':'false'}"
-                    data-status="${ativ?.status||'pendente'}"
-                    data-obs="${escaparHtml(ativ?.observacao||'')}">
-                    ${ativ ? '✏️ Editar' : '+ Registrar'}
+                  <button class="botao-acao btn-atividade" ${btnData}
+                    style="padding:5px 8px;font-size:12px;white-space:nowrap;"
+                    title="${ativ ? 'Editar atividade' : 'Registrar atividade'}">
+                    ${ativ ? '✏️' : '＋'}
                   </button>
                 </td>
+                <td style="font-weight:600;">
+                  ${escaparHtml(c.nomeFantasia||c.razaoSocial||'-')}
+                  <div style="font-size:11px;color:var(--ink-faint);font-weight:400;font-family:monospace;">${escaparHtml(c.cnpj||'')}</div>
+                </td>
+                <td style="white-space:nowrap;">${meta!=null?Math.round(meta)+'%':'—'}</td>
+                <td style="white-space:nowrap;color:var(--green);font-weight:600;">${formatarMoeda(r.valorRecolhido)}</td>
+                <td style="white-space:nowrap;color:var(--terracota);font-weight:600;">${formatarMoeda(r.valorPendente)}</td>
+                <td style="white-space:nowrap;color:var(--ink-soft);">${formatarMoeda(r.valorPausado||0)}</td>
+                <td style="white-space:nowrap;color:var(--ink-soft);">${formatarMoeda(r.valorProblemaRecolha||0)}</td>
+                <td><span class="badge ${abaixo?'terracota':'verde'}">${pct}%</span></td>
+                <td>${ativ
+                  ? (ativ.nota_enviada ? '<span class="badge verde">✓</span>' : '<span class="badge cinza">Não</span>')
+                  : '<span style="color:var(--ink-faint);">—</span>'}</td>
+                <td>${ativ ? badgeStatus(ativ.status) : '<span style="color:var(--ink-faint);">—</span>'}</td>
               </tr>`;
             }).join('')}
           </tbody>
