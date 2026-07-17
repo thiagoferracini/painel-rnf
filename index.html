@@ -336,6 +336,7 @@ let ultimosRegistrosBusca = null;
 let ordenacaoAtualResultado = { campo: null, direcao: 'asc' };
 let graficoEvolucao = null;
 let modalAtividade = { postoIdApi: null, clienteCnpj: null, clienteNome: null, periodo: null, id: null };
+let ultimaConsultaPosto = null; // cache para evitar chamar a API ao salvar atividade
 
 // =====================================================================
 // LOGO (embutida via base64 — será preenchida pela versão com logo)
@@ -658,6 +659,7 @@ async function buscarPosto() {
     });
     const json = await resp.json();
     if (!resp.ok) throw new Error(json.error || 'Erro na consulta');
+    ultimaConsultaPosto = { posto: postoEncontrado, clientes: json.registros || [], totais: json.totais, dataInicio, dataFim };
     renderizarResultadoPosto(postoEncontrado, json.registros || [], json.totais, dataInicio, dataFim);
   } catch (err) {
     area.innerHTML = `<div class="estado-vazio"><p>Erro ao consultar: ${escaparHtml(err.message)}</p></div>`;
@@ -869,9 +871,18 @@ document.getElementById('modal-salvar').addEventListener('click', async () => {
   }
 
   document.getElementById('modal-atividade').style.display = 'none';
-  // Re-executar a busca para atualizar a tabela
-  await buscarPosto();
+
+  // Atualiza só as atividades do banco (sem chamar a API do webrouter de novo)
+  if (ultimaConsultaPosto) {
+    await atualizarAtividadesNaTabela(ultimaConsultaPosto);
+  }
 });
+
+// Rebusca só as atividades e re-renderiza a tabela sem chamar a API
+async function atualizarAtividadesNaTabela(cache) {
+  const { posto, clientes, totais, dataInicio, dataFim } = cache;
+  await renderizarResultadoPosto(posto, clientes, totais, dataInicio, dataFim);
+}
 
 // =====================================================================
 // VISÃO INICIAL (totais globais + favoritos)
