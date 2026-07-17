@@ -176,6 +176,7 @@ tr:hover td{background:var(--gray-soft);}
         <div class="nav-secao" id="nav-secao-operacional" style="display:none">Operacional</div>
         <div class="nav-item ativo" data-pagina="postos" id="nav-postos" style="display:none">🔍 Consulta de Postos</div>
         <div class="nav-secao" id="nav-secao-adm" style="display:none">Administração</div>
+        <div class="nav-item" data-pagina="relatorios" id="nav-relatorios" style="display:none">📋 Relatórios</div>
         <div class="nav-item" data-pagina="adm" id="nav-adm" style="display:none">⚙️ Administração</div>
       </nav>
       <div class="usuario-box">
@@ -249,6 +250,65 @@ tr:hover td{background:var(--gray-soft);}
           <div class="estado-vazio">
             <div style="font-size:28px;">🏪</div>
             <p>Pesquise um posto para ver os dados de recolhimento por cliente</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- RELATÓRIOS -->
+      <div id="pagina-relatorios" style="display:none;">
+        <div class="cabecalho-pagina">
+          <div>
+            <h2>Relatórios de Atividades</h2>
+            <p>Visualize e exporte todas as atividades registradas pelo time</p>
+          </div>
+        </div>
+        <div class="painel">
+          <div class="filtros" style="margin-bottom:0;">
+            <div class="campo">
+              <label>Data início</label>
+              <input type="date" id="rel-data-inicio" style="margin-bottom:0;">
+            </div>
+            <div class="campo">
+              <label>Data fim</label>
+              <input type="date" id="rel-data-fim" style="margin-bottom:0;">
+            </div>
+            <div class="campo">
+              <label>Analista</label>
+              <select id="rel-analista" style="margin-bottom:0;">
+                <option value="">Todos</option>
+              </select>
+            </div>
+            <div class="campo">
+              <label>Justificativa</label>
+              <select id="rel-justificativa" style="margin-bottom:0;">
+                <option value="">Todas</option>
+                <option value="Motorista não solicitou NF, no ato do abastecimento">Motorista não solicitou NF</option>
+                <option value="Estabelecimento não colaborativo">Estabelecimento não colaborativo</option>
+                <option value="Solicitação de arquivamento / Cupom Fiscal / CNPJ divergente">Arquivamento / CNPJ divergente</option>
+                <option value="Contato desatualizado">Contato desatualizado</option>
+                <option value="Posto vendido, não emite NF retroativa">Posto vendido</option>
+                <option value="Não consta transação no estabelecimento para o cliente">Não consta transação</option>
+                <option value="Posto colaborativo, mas ainda não enviou essa nota">Posto colaborativo, aguardando nota</option>
+                <option value="Recolhido">Recolhido</option>
+              </select>
+            </div>
+            <div class="campo">
+              <label>Status</label>
+              <select id="rel-status" style="margin-bottom:0;">
+                <option value="">Todos</option>
+                <option value="pendente">Pendente</option>
+                <option value="em_contato">Em contato</option>
+                <option value="resolvido">Resolvido</option>
+                <option value="sem_retorno">Sem retorno</option>
+              </select>
+            </div>
+            <button class="primario" id="btn-gerar-relatorio" style="width:auto;padding:11px 20px;">Gerar relatório</button>
+          </div>
+        </div>
+        <div id="area-relatorio">
+          <div class="estado-vazio">
+            <div style="font-size:28px;">📋</div>
+            <p>Selecione o período e clique em Gerar relatório</p>
           </div>
         </div>
       </div>
@@ -393,6 +453,7 @@ async function iniciarApp(sessao) {
     document.getElementById('nav-secao-operacional').style.display = 'block';
     document.getElementById('nav-postos').style.display = 'flex';
     document.getElementById('nav-secao-adm').style.display = 'block';
+    document.getElementById('nav-relatorios').style.display = 'flex';
     document.getElementById('nav-adm').style.display = 'flex';
     document.getElementById('filtro-cliente-busca').style.display = 'inline-block';
   }
@@ -426,8 +487,9 @@ document.querySelectorAll('.nav-item').forEach(item => {
     const pagina = item.dataset.pagina;
     document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('ativo'));
     item.classList.add('ativo');
-    document.querySelectorAll('#pagina-dashboard,#pagina-postos,#pagina-adm').forEach(p => p.style.display = 'none');
+    document.querySelectorAll('#pagina-dashboard,#pagina-postos,#pagina-relatorios,#pagina-adm').forEach(p => p.style.display = 'none');
     document.getElementById('pagina-' + pagina).style.display = 'block';
+    if (pagina === 'relatorios') iniciarPaginaRelatorios();
   });
 });
 
@@ -1132,6 +1194,181 @@ async function carregarAdm() {
       <div class="kpi"><div class="rotulo">Postos na base</div><div class="valor">${totalPostos||0}</div></div>
       <div class="kpi"><div class="rotulo">Usuários ativos</div><div class="valor">${perfis?.length||0}</div></div>
     </div>`;
+}
+
+// =====================================================================
+// RELATÓRIOS DE ATIVIDADES
+// =====================================================================
+async function iniciarPaginaRelatorios() {
+  // Datas padrão: mês atual
+  const hoje = new Date();
+  const inicioMes = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
+  if (!document.getElementById('rel-data-inicio').value) {
+    document.getElementById('rel-data-inicio').value = inicioMes.toISOString().slice(0,10);
+    document.getElementById('rel-data-fim').value = hoje.toISOString().slice(0,10);
+  }
+
+  // Carregar analistas no seletor
+  const { data: perfis } = await supabaseClient.from('perfis').select('id, nome').eq('papel', 'staff').order('nome');
+  const selAnalista = document.getElementById('rel-analista');
+  selAnalista.innerHTML = '<option value="">Todos</option>' +
+    (perfis||[]).map(p => `<option value="${p.id}">${escaparHtml(p.nome||'—')}</option>`).join('');
+}
+
+document.getElementById('btn-gerar-relatorio').addEventListener('click', gerarRelatorio);
+
+async function gerarRelatorio() {
+  const area = document.getElementById('area-relatorio');
+  area.innerHTML = '<div class="carregando"><div class="spinner"></div>Buscando atividades...</div>';
+
+  const dataInicio = document.getElementById('rel-data-inicio').value;
+  const dataFim = document.getElementById('rel-data-fim').value;
+  const analistaId = document.getElementById('rel-analista').value;
+  const justificativa = document.getElementById('rel-justificativa').value;
+  const status = document.getElementById('rel-status').value;
+
+  let query = supabaseClient
+    .from('atividades_posto')
+    .select('*')
+    .order('criado_em', { ascending: false });
+
+  if (dataInicio) query = query.gte('criado_em', dataInicio + 'T00:00:00');
+  if (dataFim) query = query.lte('criado_em', dataFim + 'T23:59:59');
+  if (analistaId) query = query.eq('analista_id', analistaId);
+  if (status) query = query.eq('status', status);
+
+  const { data: atividades, error } = await query;
+
+  if (error) {
+    area.innerHTML = `<div class="estado-vazio"><p>Erro ao buscar: ${escaparHtml(error.message)}</p></div>`;
+    return;
+  }
+
+  // Filtro de justificativa (feito no front pois está dentro do campo observacao)
+  let lista = atividades || [];
+  if (justificativa) {
+    lista = lista.filter(a => (a.observacao||'').startsWith(justificativa));
+  }
+
+  if (lista.length === 0) {
+    area.innerHTML = '<div class="estado-vazio"><div style="font-size:28px;">📭</div><p>Nenhuma atividade encontrada para os filtros selecionados</p></div>';
+    return;
+  }
+
+  // Totalizadores por justificativa
+  const porJustificativa = {};
+  const porStatus = {};
+  const porAnalista = {};
+  let totalNota = 0;
+
+  lista.forEach(a => {
+    const just = (a.observacao||'').split('\n---\n')[0] || 'Sem justificativa';
+    porJustificativa[just] = (porJustificativa[just]||0) + 1;
+    porStatus[a.status||'pendente'] = (porStatus[a.status||'pendente']||0) + 1;
+    porAnalista[a.analista_nome||'—'] = (porAnalista[a.analista_nome||'—']||0) + 1;
+    if (a.nota_enviada) totalNota++;
+  });
+
+  const rotuloStatus = { pendente:'⏳ Pendente', em_contato:'📞 Em contato', resolvido:'✅ Resolvido', sem_retorno:'🚫 Sem retorno' };
+
+  area.innerHTML = `
+    <div class="grid-kpi" style="margin-bottom:20px;">
+      <div class="kpi"><div class="rotulo">Total de atividades</div><div class="valor">${lista.length}</div></div>
+      <div class="kpi"><div class="rotulo">Nota enviada</div><div class="valor verde">${totalNota}</div><div class="sub-valor">${calcularPct(totalNota, lista.length)}%</div></div>
+      <div class="kpi"><div class="rotulo">Resolvidos</div><div class="valor verde">${porStatus['resolvido']||0}</div><div class="sub-valor">${calcularPct(porStatus['resolvido']||0, lista.length)}%</div></div>
+      <div class="kpi"><div class="rotulo">Sem retorno</div><div class="valor terracota">${porStatus['sem_retorno']||0}</div><div class="sub-valor">${calcularPct(porStatus['sem_retorno']||0, lista.length)}%</div></div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px;">
+      <div class="painel" style="margin-bottom:0;">
+        <h3 style="margin-bottom:12px;">Por justificativa</h3>
+        <table>
+          <thead><tr><th>Justificativa</th><th>Qtd</th><th>%</th></tr></thead>
+          <tbody>
+            ${Object.entries(porJustificativa).sort((a,b)=>b[1]-a[1]).map(([j,n])=>`
+              <tr>
+                <td style="font-size:12px;">${escaparHtml(j)}</td>
+                <td style="font-weight:600;">${n}</td>
+                <td>${calcularPct(n,lista.length)}%</td>
+              </tr>`).join('')}
+          </tbody>
+        </table>
+      </div>
+      <div class="painel" style="margin-bottom:0;">
+        <h3 style="margin-bottom:12px;">Por analista</h3>
+        <table>
+          <thead><tr><th>Analista</th><th>Atividades</th><th>%</th></tr></thead>
+          <tbody>
+            ${Object.entries(porAnalista).sort((a,b)=>b[1]-a[1]).map(([nome,n])=>`
+              <tr>
+                <td>${escaparHtml(nome)}</td>
+                <td style="font-weight:600;">${n}</td>
+                <td>${calcularPct(n,lista.length)}%</td>
+              </tr>`).join('')}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="painel">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px;">
+        <h3 style="margin-bottom:0;">Detalhamento (${lista.length} registros)</h3>
+        <button class="botao-acao" id="btn-exportar-relatorio">⬇ Exportar CSV</button>
+      </div>
+      <div style="overflow-x:auto;">
+        <table>
+          <thead><tr>
+            <th>Data</th><th>Analista</th><th>Posto (ID)</th><th>Cliente</th><th>Nota</th><th>Status</th><th>Justificativa</th><th>Observação</th>
+          </tr></thead>
+          <tbody>
+            ${lista.map(a => {
+              const partes = (a.observacao||'').split('\n---\n');
+              const just = partes[0] || '—';
+              const obs = partes[1] || '';
+              return `<tr>
+                <td style="white-space:nowrap;font-size:12px;">${new Date(a.criado_em).toLocaleDateString('pt-BR')} ${new Date(a.criado_em).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}</td>
+                <td style="white-space:nowrap;">${escaparHtml(a.analista_nome||'—')}</td>
+                <td style="font-size:12px;">${a.posto_id_api}</td>
+                <td style="font-size:12px;">${escaparHtml(a.cliente_nome||'—')}</td>
+                <td>${a.nota_enviada ? '<span class="badge verde">✓</span>' : '<span class="badge cinza">Não</span>'}</td>
+                <td>${badgeStatus(a.status||'pendente')}</td>
+                <td style="font-size:12px;max-width:200px;">${escaparHtml(just)}</td>
+                <td style="font-size:12px;color:var(--ink-soft);">${escaparHtml(obs)}</td>
+              </tr>`;
+            }).join('')}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  `;
+
+  document.getElementById('btn-exportar-relatorio').addEventListener('click', () => exportarCsvAtividades(lista));
+}
+
+function exportarCsvAtividades(lista) {
+  const linhas = [['Data','Analista','Posto ID','Cliente','CNPJ Cliente','Nota Enviada','Status','Justificativa','Observação','Período Início','Período Fim']];
+  lista.forEach(a => {
+    const partes = (a.observacao||'').split('\n---\n');
+    linhas.push([
+      new Date(a.criado_em).toLocaleString('pt-BR'),
+      a.analista_nome||'',
+      a.posto_id_api||'',
+      a.cliente_nome||'',
+      a.cliente_cnpj||'',
+      a.nota_enviada ? 'Sim' : 'Não',
+      a.status||'',
+      partes[0]||'',
+      partes[1]||'',
+      a.periodo_inicio||'',
+      a.periodo_fim||'',
+    ]);
+  });
+  const csv = linhas.map(l => l.map(c => `"${String(c).replace(/"/g,'""')}"`).join(';')).join('\r\n');
+  const blob = new Blob(['\ufeff'+csv], {type:'text/csv;charset=utf-8;'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `relatorio_atividades_${new Date().toISOString().slice(0,10)}.csv`;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
 }
 
 // =====================================================================
