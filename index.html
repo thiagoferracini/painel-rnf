@@ -398,6 +398,7 @@ let ordenacaoAtualResultado = { campo: null, direcao: 'asc' };
 let graficoEvolucao = null;
 let modalAtividade = { postoIdApi: null, clienteCnpj: null, clienteNome: null, periodo: null, id: null };
 let ultimaConsultaPosto = null; // cache para evitar chamar a API ao salvar atividade
+const cacheTransacoes = {}; // cache de transações por chave "clienteId-postoId-dataInicio-dataFim"
 
 // =====================================================================
 // LOGO (embutida via base64 — será preenchida pela versão com logo)
@@ -813,7 +814,8 @@ async function renderizarResultadoPosto(posto, clientes, totais, dataInicio, dat
               const meta = c.percentualRecolhaNegociado;
               const abaixo = meta != null && pct < meta;
               const ativ = mapaAtividades[cnpjN];
-              const btnData = `data-posto-id="${posto.id_api}" data-cnpj="${escaparHtml(c.cnpj||'')}" data-nome="${escaparHtml(c.nomeFantasia||c.razaoSocial||'-')}" data-periodo-inicio="${dataInicio}" data-periodo-fim="${dataFim}" data-ativ-id="${ativ?.id||''}" data-nota="${ativ?.nota_enviada?'true':'false'}" data-status="${ativ?.status||'pendente'}" data-obs="${escaparHtml(ativ?.observacao||'')}"`;
+              const btnData = `data-posto-id="${posto.id_api}" data-posto-nome="${escaparHtml(posto.nome||'')}" data-posto-cnpj="${escaparHtml(posto.cnpj||'')}" data-cnpj="${escaparHtml(c.cnpj||'')}" data-nome="${escaparHtml(c.nomeFantasia||c.razaoSocial||'-')}" data-periodo-inicio="${dataInicio}" data-periodo-fim="${dataFim}" data-ativ-id="${ativ?.id||''}" data-nota="${ativ?.nota_enviada?'true':'false'}" data-status="${ativ?.status||'pendente'}" data-obs="${escaparHtml(ativ?.observacao||'')}"`;
+              const rowId = `trans-${cnpjN}`;
               return `<tr>
                 <td>
                   <button class="botao-acao btn-atividade" ${btnData}
@@ -823,6 +825,14 @@ async function renderizarResultadoPosto(posto, clientes, totais, dataInicio, dat
                   </button>
                 </td>
                 <td style="font-weight:600;">
+                  <button class="btn-expandir-transacoes" 
+                    data-cliente-id="${c.id||''}"
+                    data-posto-id="${posto.id_api}"
+                    data-row-id="${rowId}"
+                    data-data-inicio="${dataInicio}"
+                    data-data-fim="${dataFim}"
+                    style="background:none;border:none;cursor:pointer;color:var(--accent);font-size:12px;padding:0;margin-right:6px;"
+                    title="Ver transações individuais">▶</button>
                   ${escaparHtml(c.nomeFantasia||c.razaoSocial||'-')}
                   <div style="font-size:11px;color:var(--ink-faint);font-weight:400;font-family:monospace;">${escaparHtml(c.cnpj||'')}</div>
                 </td>
@@ -839,6 +849,13 @@ async function renderizarResultadoPosto(posto, clientes, totais, dataInicio, dat
                   ${badgeStatus(ativ.status)}
                   ${ativ.observacao ? `<div style="font-size:11px;color:var(--ink-soft);margin-top:3px;max-width:200px;">${escaparHtml(ativ.observacao.split('\n---\n')[0])}</div>` : ''}
                 ` : '<span style="color:var(--ink-faint);">—</span>'}</td>
+              </tr>
+              <tr id="${rowId}" style="display:none;">
+                <td colspan="10" style="padding:0;background:var(--bg);">
+                  <div style="padding:12px 20px;" class="conteudo-transacoes-${cnpjN}">
+                    <div class="carregando"><div class="spinner"></div>Carregando transações...</div>
+                  </div>
+                </td>
               </tr>`;
             }).join('')}
           </tbody>
@@ -850,6 +867,99 @@ async function renderizarResultadoPosto(posto, clientes, totais, dataInicio, dat
   document.querySelectorAll('.btn-atividade').forEach(btn => {
     btn.addEventListener('click', () => abrirModalAtividade(btn));
   });
+
+  document.querySelectorAll('.btn-expandir-transacoes').forEach(btn => {
+    btn.addEventListener('click', () => expandirTransacoes(btn));
+  });
+}
+
+async function expandirTransacoes(btn) {
+  const rowId = btn.dataset.rowId;
+  const clienteId = parseInt(btn.dataset.clienteId);
+  const postoId = parseInt(btn.dataset.postoId);
+  const dataInicio = btn.dataset.dataInicio;
+  const dataFim = btn.dataset.dataFim;
+  const cnpjN = rowId.replace('trans-', '');
+  const chaveCache = `${clienteId}-${postoId}-${dataInicio}-${dataFim}`;
+
+  const row = document.getElementById(rowId);
+  const conteudo = document.querySelector(`.conteudo-transacoes-${cnpjN}`);
+
+  // Toggle: fechar se já aberto
+  if (row.style.display !== 'none') {
+    row.style.display = 'none';
+    btn.textContent = '▶';
+    return;
+  }
+
+  row.style.display = 'table-row';
+  btn.textContent = '▼';
+
+  // Usar cache se já buscou antes
+  if (cacheTransacoes[chaveCache]) {
+    renderizarTransacoes(conteudo, cacheTransacoes[chaveCache]);
+    return;
+  }
+
+  conteudo.innerHTML = '<div class="carregando"><div class="spinner"></div>Carregando transações...</div>';
+
+  try {
+    const resp = await fetch(EDGE_FUNCTION_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + sessaoAtual.access_token },
+      body: JSON.stringify({ dataInicio, dataFim, clienteId, postoId, modo: 'transacoes' }),
+    });
+    const json = await resp.json();
+    if (!resp.ok) throw new Error(json.error || 'Erro');
+
+    const transacoes = json.transacoes || [];
+    cacheTransacoes[chaveCache] = transacoes; // salva no cache
+    renderizarTransacoes(conteudo, transacoes);
+  } catch (err) {
+    conteudo.innerHTML = `<p style="color:var(--terracota);font-size:13px;">Erro: ${escaparHtml(err.message)}</p>`;
+  }
+}
+
+function renderizarTransacoes(conteudo, transacoes) {
+  if (!transacoes.length) {
+    conteudo.innerHTML = '<p style="color:var(--ink-faint);font-size:13px;padding:8px 0;">Nenhuma transação encontrada para este cliente neste posto.</p>';
+    return;
+  }
+
+  const badgeStatusNF = (s) => {
+    const map = { 'RECEBIDA': ['verde','✓ Recebida'], 'PENDENTE': ['terracota','⏳ Pendente'], 'PROBLEMA': ['terracota','⚠ Problema'] };
+    const [cls, label] = map[s] || ['cinza', s||'—'];
+    return `<span class="badge ${cls}" style="font-size:11px;">${label}</span>`;
+  };
+
+  conteudo.innerHTML = `
+    <table style="font-size:12px;margin:4px 0;">
+      <thead><tr style="background:var(--bg);">
+        <th>Data/Hora</th>
+        <th>Placa</th>
+        <th>Combustível</th>
+        <th>Qtd (L)</th>
+        <th>Valor unit.</th>
+        <th>Valor total</th>
+        <th>NF</th>
+        <th>Status</th>
+        <th>Analista recolha</th>
+      </tr></thead>
+      <tbody>
+        ${transacoes.map(t => `<tr>
+          <td style="white-space:nowrap;">${t.dataHora||'—'}</td>
+          <td style="font-weight:600;font-family:monospace;">${t.placa||'—'}</td>
+          <td>${escaparHtml(t.mercadoria?.descricao||'—')}</td>
+          <td style="text-align:right;">${t.quantidade!=null?Number(t.quantidade).toFixed(2):'—'}</td>
+          <td style="white-space:nowrap;">R$ ${Number(t.valorUnitario||0).toLocaleString('pt-BR',{minimumFractionDigits:2})}</td>
+          <td style="white-space:nowrap;font-weight:600;">R$ ${Number(t.valorTotal||0).toLocaleString('pt-BR',{minimumFractionDigits:2})}</td>
+          <td style="white-space:nowrap;">${t.numeroNotaFiscal?`NF ${t.numeroNotaFiscal}`:'—'}</td>
+          <td>${badgeStatusNF(t.status)}</td>
+          <td style="white-space:nowrap;">${escaparHtml(t.usuarioRecolha?.nome||'—')}</td>
+        </tr>`).join('')}
+      </tbody>
+    </table>
+  `;
 }
 
 function badgeStatus(status) {
@@ -869,6 +979,8 @@ function badgeStatus(status) {
 function abrirModalAtividade(btn) {
   modalAtividade = {
     postoIdApi: parseInt(btn.dataset.postoId),
+    postoNome: btn.dataset.postoNome || '',
+    postoCnpj: btn.dataset.postoCnpj || '',
     clienteCnpj: btn.dataset.cnpj,
     clienteNome: btn.dataset.nome,
     periodoInicio: btn.dataset.periodoInicio,
@@ -903,6 +1015,8 @@ document.getElementById('modal-salvar').addEventListener('click', async () => {
 
   const dados = {
     posto_id_api: modalAtividade.postoIdApi,
+    posto_nome: modalAtividade.postoNome,
+    posto_cnpj: modalAtividade.postoCnpj,
     cliente_cnpj: modalAtividade.clienteCnpj,
     cliente_nome: modalAtividade.clienteNome,
     periodo_inicio: converterDataBRparaISO(modalAtividade.periodoInicio),
@@ -1318,7 +1432,7 @@ async function gerarRelatorio() {
       <div style="overflow-x:auto;">
         <table>
           <thead><tr>
-            <th>Data</th><th>Analista</th><th>Posto (ID)</th><th>Cliente</th><th>Nota</th><th>Status</th><th>Justificativa</th><th>Observação</th>
+            <th>Data</th><th>Analista</th><th>Posto</th><th>Cliente</th><th>Nota</th><th>Status</th><th>Justificativa</th><th>Observação</th>
           </tr></thead>
           <tbody>
             ${lista.map(a => {
@@ -1328,7 +1442,11 @@ async function gerarRelatorio() {
               return `<tr>
                 <td style="white-space:nowrap;font-size:12px;">${new Date(a.criado_em).toLocaleDateString('pt-BR')} ${new Date(a.criado_em).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}</td>
                 <td style="white-space:nowrap;">${escaparHtml(a.analista_nome||'—')}</td>
-                <td style="font-size:12px;">${a.posto_id_api}</td>
+                <td style="font-size:12px;">
+                  ${escaparHtml(a.posto_nome||'—')}
+                  ${a.posto_cnpj ? `<div style="font-size:10px;color:var(--ink-faint);font-family:monospace;">${escaparHtml(a.posto_cnpj)}</div>` : ''}
+                  <div style="font-size:10px;color:var(--ink-faint);">ID: ${a.posto_id_api}</div>
+                </td>
                 <td style="font-size:12px;">${escaparHtml(a.cliente_nome||'—')}</td>
                 <td>${a.nota_enviada ? '<span class="badge verde">✓</span>' : '<span class="badge cinza">Não</span>'}</td>
                 <td>${badgeStatus(a.status||'pendente')}</td>
@@ -1346,12 +1464,14 @@ async function gerarRelatorio() {
 }
 
 function exportarCsvAtividades(lista) {
-  const linhas = [['Data','Analista','Posto ID','Cliente','CNPJ Cliente','Nota Enviada','Status','Justificativa','Observação','Período Início','Período Fim']];
+  const linhas = [['Data','Analista','Posto','CNPJ Posto','ID Posto','Cliente','CNPJ Cliente','Nota Enviada','Status','Justificativa','Observação','Período Início','Período Fim']];
   lista.forEach(a => {
     const partes = (a.observacao||'').split('\n---\n');
     linhas.push([
       new Date(a.criado_em).toLocaleString('pt-BR'),
       a.analista_nome||'',
+      a.posto_nome||'',
+      a.posto_cnpj||'',
       a.posto_id_api||'',
       a.cliente_nome||'',
       a.cliente_cnpj||'',
