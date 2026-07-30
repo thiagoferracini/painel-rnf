@@ -318,9 +318,50 @@ tr:hover td{background:var(--gray-soft);}
         <div class="cabecalho-pagina">
           <div>
             <h2>Administração</h2>
-            <p>Gerencie usuários e configurações do sistema</p>
+            <p>Gerencie usuários, postos e configurações do sistema</p>
           </div>
         </div>
+
+        <!-- CADASTRO DE NOVO POSTO -->
+        <div class="painel">
+          <h3 style="margin-bottom:16px;">+ Cadastrar novo posto</h3>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+            <div>
+              <label>ID do posto (numérico, fornecido pelo Dev/webrouter) *</label>
+              <input type="number" id="novo-posto-id" placeholder="Ex: 1234" style="margin-bottom:0;">
+            </div>
+            <div>
+              <label>CNPJ *</label>
+              <input type="text" id="novo-posto-cnpj" placeholder="Ex: 03.573.820/0001-60" style="margin-bottom:0;">
+            </div>
+            <div>
+              <label>Nome fantasia *</label>
+              <input type="text" id="novo-posto-fantasia" placeholder="Ex: POSTO BOA VIAGEM" style="margin-bottom:0;">
+            </div>
+            <div>
+              <label>Razão social</label>
+              <input type="text" id="novo-posto-razao" placeholder="Ex: BOA VIAGEM COMBUSTÍVEIS LTDA" style="margin-bottom:0;">
+            </div>
+          </div>
+          <div id="msg-cadastro-posto" style="margin-top:12px;font-size:13px;display:none;"></div>
+          <div style="margin-top:16px;">
+            <button class="primario" id="btn-cadastrar-posto" style="width:auto;padding:10px 24px;">Cadastrar posto</button>
+          </div>
+        </div>
+
+        <!-- BUSCAR POSTO CADASTRADO -->
+        <div class="painel">
+          <h3 style="margin-bottom:16px;">🔍 Buscar posto cadastrado</h3>
+          <div style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;">
+            <div class="campo" style="flex:1;min-width:200px;">
+              <label>Nome ou CNPJ</label>
+              <input type="text" id="busca-posto-adm" placeholder="Digite para buscar..." style="margin-bottom:0;">
+            </div>
+            <button class="primario" id="btn-buscar-posto-adm" style="width:auto;padding:10px 18px;">Buscar</button>
+          </div>
+          <div id="area-busca-posto-adm" style="margin-top:16px;"></div>
+        </div>
+
         <div class="painel">
           <h3>Usuários cadastrados</h3>
           <div id="area-usuarios">
@@ -1282,6 +1323,116 @@ async function abrirDetalheCliente(cnpj, nome) {
 // =====================================================================
 // ADMINISTRAÇÃO
 // =====================================================================
+// =====================================================================
+// CADASTRO DE POSTO
+// =====================================================================
+document.getElementById('btn-cadastrar-posto').addEventListener('click', async () => {
+  const btn = document.getElementById('btn-cadastrar-posto');
+  const msg = document.getElementById('msg-cadastro-posto');
+  const idApi = parseInt(document.getElementById('novo-posto-id').value);
+  const cnpj = document.getElementById('novo-posto-cnpj').value.trim();
+  const fantasia = document.getElementById('novo-posto-fantasia').value.trim();
+  const razao = document.getElementById('novo-posto-razao').value.trim();
+
+  msg.style.display = 'none';
+
+  if (!idApi || !cnpj || !fantasia) {
+    msg.textContent = 'Preencha os campos obrigatórios: ID, CNPJ e Nome fantasia.';
+    msg.style.color = 'var(--terracota)';
+    msg.style.display = 'block';
+    return;
+  }
+
+  btn.disabled = true; btn.textContent = 'Cadastrando...';
+
+  // Verificar se o ID já existe
+  const { data: existente } = await supabaseClient
+    .from('fila_descoberta_postos')
+    .select('id_posto')
+    .eq('id_posto', idApi)
+    .single();
+
+  if (existente) {
+    msg.textContent = `Posto com ID ${idApi} já existe na base.`;
+    msg.style.color = 'var(--terracota)';
+    msg.style.display = 'block';
+    btn.disabled = false; btn.textContent = 'Cadastrar posto';
+    return;
+  }
+
+  const { error } = await supabaseClient.from('fila_descoberta_postos').insert({
+    id_posto: idApi,
+    cnpj_posto: cnpj,
+    nome_fantasia_posto: fantasia,
+    razao_social_posto: razao || fantasia,
+    status: 'PENDENTE',
+  });
+
+  btn.disabled = false; btn.textContent = 'Cadastrar posto';
+
+  if (error) {
+    msg.textContent = 'Erro ao cadastrar: ' + error.message;
+    msg.style.color = 'var(--terracota)';
+  } else {
+    msg.textContent = `✅ Posto "${fantasia}" cadastrado com sucesso! ID: ${idApi}`;
+    msg.style.color = 'var(--green)';
+    // Limpar campos
+    document.getElementById('novo-posto-id').value = '';
+    document.getElementById('novo-posto-cnpj').value = '';
+    document.getElementById('novo-posto-fantasia').value = '';
+    document.getElementById('novo-posto-razao').value = '';
+    // Atualizar resumo
+    carregarAdm();
+  }
+  msg.style.display = 'block';
+});
+
+document.getElementById('btn-buscar-posto-adm').addEventListener('click', async () => {
+  const texto = document.getElementById('busca-posto-adm').value.trim();
+  const area = document.getElementById('area-busca-posto-adm');
+  if (!texto) return;
+
+  area.innerHTML = '<div class="carregando"><div class="spinner"></div>Buscando...</div>';
+
+  const cnpjLimpo = texto.replace(/[^0-9]/g, '');
+  let query = supabaseClient.from('fila_descoberta_postos')
+    .select('id_posto, cnpj_posto, nome_fantasia_posto, razao_social_posto, status')
+    .limit(10);
+
+  if (cnpjLimpo.length >= 8) {
+    query = query.ilike('cnpj_posto', `%${cnpjLimpo}%`);
+  } else {
+    query = query.or(`nome_fantasia_posto.ilike.%${texto}%,razao_social_posto.ilike.%${texto}%`);
+  }
+
+  const { data: postos, error } = await query;
+
+  if (error || !postos?.length) {
+    area.innerHTML = '<p style="color:var(--ink-faint);font-size:13px;">Nenhum posto encontrado.</p>';
+    return;
+  }
+
+  area.innerHTML = `
+    <table>
+      <thead><tr><th>ID API</th><th>Nome fantasia</th><th>Razão social</th><th>CNPJ</th><th>Status</th></tr></thead>
+      <tbody>
+        ${postos.map(p => `<tr>
+          <td style="font-family:monospace;font-weight:600;">${p.id_posto}</td>
+          <td>${escaparHtml(p.nome_fantasia_posto||'—')}</td>
+          <td style="color:var(--ink-soft);font-size:12px;">${escaparHtml(p.razao_social_posto||'—')}</td>
+          <td style="font-family:monospace;font-size:12px;">${escaparHtml(p.cnpj_posto||'—')}</td>
+          <td><span class="badge ${p.status==='PENDENTE'?'cinza':'verde'}">${p.status||'—'}</span></td>
+        </tr>`).join('')}
+      </tbody>
+    </table>
+  `;
+});
+
+// Enter no campo de busca também dispara a pesquisa
+document.getElementById('busca-posto-adm').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') document.getElementById('btn-buscar-posto-adm').click();
+});
+
 async function carregarAdm() {
   const areaUsuarios = document.getElementById('area-usuarios');
   const areaResumo = document.getElementById('area-resumo-adm');
